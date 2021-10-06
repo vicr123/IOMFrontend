@@ -36,7 +36,7 @@ class MapView extends React.Component {
             </div>
         } else if (this.state.data) {
             return <div>
-                {["", ...this.state.data.map(map => map.category)].filter((category, index, array) => array.indexOf(category) === index).map(category => <MapCategory manager={this.mapManager} category={category} key={category} data={this.state.data}/>)}
+                {["", ...this.state.data.map(map => map.category)].filter(category => category !== "").filter((category, index, array) => array.indexOf(category) === index).map(category => <MapCategory manager={this.mapManager} category={category} key={category} data={this.state.data}/>)}
             </div>
         } else {
             return <div>

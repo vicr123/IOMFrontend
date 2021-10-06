@@ -22,7 +22,7 @@ public class IOMFrontendPlugin extends JavaPlugin {
         images = new ImageManager(this);
         server = new ServerRoot(this, db, images);
 
-        Objects.requireNonNull(getCommand("iom")).setExecutor(new IOMCommand(server));
+        Objects.requireNonNull(getCommand("iom")).setExecutor(new IOMCommand(server, db, this));
 
         getLogger().info("IOMFrontend is ready!");
     }

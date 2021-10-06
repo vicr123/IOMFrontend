@@ -1,6 +1,8 @@
 import React from "react";
 import Styles from "./mapItem.module.css";
 
+import GeneratedMap from "./generatedmap.svg";
+
 class MapItem extends React.Component {
     constructor(props) {
         super(props);
@@ -12,7 +14,7 @@ class MapItem extends React.Component {
 
     render() {
         return <div draggable={true} className={[Styles.MapItem, this.state.dragging ? Styles.Dragging : ""].join(" ")} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)} onDragStart={this.dragStart.bind(this)}>
-            <img className={Styles.MapImage} src={`/images/${this.props.data.pictureResource}`} />
+            <img className={Styles.MapImage} src={this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`} />
             <span>{this.props.data.name}</span>
             <div>
                 <button onClick={this.giveMap.bind(this)}>Get</button>
