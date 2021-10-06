@@ -45,10 +45,14 @@ public class IOMCommand implements CommandExecutor {
 
         //First, attempt to clean up the map database
         //Delete any maps that are not found (deleted in-game)
-        db.getMapDao().forEach(map -> {
-            ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
-            if (imageMap == null) toDelete.add(map);
-        });
+        try {
+            for (Map map : db.getMapDao().queryForEq("associatedPlayer", player.getUniqueId().toString())) {
+                ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
+                if (imageMap == null) toDelete.add(map);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         //Import any new maps that are not found (created in-game)
         for (ImageMap imageMap : MapManager.getMaps(player.getUniqueId())) {
