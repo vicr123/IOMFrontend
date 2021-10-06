@@ -1,0 +1,12 @@
+@font-face {
+    font-family: "Contemporary";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Contemporary"), local("Contemporary-Regular"), url(https://vicr123.com/typeface/Contemporary-Regular.ttf);
+}
+
+body {
+    background: rgb(40, 40, 40);
+    color: white;
+    font-family: Contemporary, sans-serif;
+}

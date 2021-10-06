@@ -1,0 +1,22 @@
+.SelectorRoot {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.AddPicture {
+    width: 128px;
+    height: 128px;
+
+    border: 5px dotted rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+
+    background: url("add.svg") no-repeat 50% 50%;
+    background-size: 75%;
+}
+
+.FileSelector {
+    display: none;
+}

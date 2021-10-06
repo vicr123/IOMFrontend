@@ -1,0 +1,16 @@
+.MapItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 3px;
+}
+
+.MapImage {
+    width: 100%;
+}
+
+.Dragging {
+    border: 3px solid aqua;
+    margin: 0px;
+    background-clip: padding-box;
+}

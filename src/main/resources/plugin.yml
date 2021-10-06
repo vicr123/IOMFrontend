@@ -1,0 +1,8 @@
+name: IOMFrontend
+version: 1.0.0
+api-version: 1.16
+main: com.vicr123.IOMFrontend.IOMFrontendPlugin
+commands:
+  iom:
+    description: Create a new ImageOnMap Frontend Session
+    usage: /iom

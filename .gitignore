@@ -1,0 +1,5 @@
+src/main/resources/frontend/node_modules
+build
+.idea
+.gradle
+
