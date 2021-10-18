@@ -23,7 +23,7 @@ class NewMapItemSelector extends React.Component {
 
     onChange(e) {
         this.props.manager.uploadMaps(
-            [...e.target.files].filter(file => file.type === "image/png"), this.props.category);
+            [...e.target.files].filter(file => ["image/png", "image/svg+xml"].includes(file.type)), this.props.category);
     }
 }
 

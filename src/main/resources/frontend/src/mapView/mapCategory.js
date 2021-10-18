@@ -31,7 +31,7 @@ class MapCategory extends React.Component {
         if (this.state.collapsed) return null;
 
         return <div className={[Styles.CategoryItems, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
-                {this.props.data.filter(map => map.category === this.props.category).map(map => <MapItem manager={this.props.manager} key={map.id} data={map} />)}
+                {this.props.data.filter(map => map.category ? map.category === this.props.category : !this.props.category).map(map => <MapItem manager={this.props.manager} key={map.id} data={map} />)}
                 <NewMapItemSelector manager={this.props.manager} category={this.props.category} />
         </div>
     }
@@ -85,7 +85,7 @@ class MapCategory extends React.Component {
             this.props.manager.uploadMaps(
                 [...transfer.items].filter(item => item.kind === "file")
                     .map(item => item.getAsFile())
-                    .filter(file => file.type === "image/png"), this.props.category);
+                    .filter(file => ["image/png", "image/svg+xml"].includes(file.type)), this.props.category);
         }
     }
 }

@@ -12,12 +12,8 @@ class MapManager {
         Scrim.mount();
         try {
             for (let file of maps) {
-                let imageContents = await new Promise((res, rej) => {
-                    let reader = new FileReader();
-                    reader.onload = () => res(reader.result.substr(22));
-                    reader.onerror = error => rej(error);
-                    reader.readAsDataURL(file);
-                });
+                let imageContents = await this.getImage(file);
+                if (!imageContents) continue;
 
                 await Fetch.post("/maps", {
                     name: file.name.replace(".png", ""),
@@ -80,12 +76,8 @@ class MapManager {
     async updateImage(id, file) {
         Scrim.mount();
         try {
-            let imageContents = await new Promise((res, rej) => {
-                let reader = new FileReader();
-                reader.onload = () => res(reader.result.substr(22));
-                reader.onerror = error => rej(error);
-                reader.readAsDataURL(file);
-            });
+            let imageContents = await this.getImage(file);
+            if (!imageContents) return;
 
             await Fetch.put(`/maps/${id}`, {
                 image: imageContents
@@ -96,6 +88,28 @@ class MapManager {
         } finally {
             Scrim.unmount();
         }
+    }
+
+    getImage(file) {
+        return new Promise((res, rej) => {
+            let reader = new FileReader();
+            reader.onload = () => {
+                //Perform checks
+                let image = new Image();
+                image.src = reader.result.toString();
+                image.onload = () => {
+                    if (!(image.width % 128 === 0 && image.width % 128 === 0)) {
+                        if (!window.confirm("You are uploading an image with a non-canon size. For best results, the image should be sized in multiples of 128x128.")) {
+                            rej("Cancelled")
+                            return;
+                        }
+                    }
+                    res(reader.result.substr(reader.result.indexOf(",") + 1));
+                }
+            }
+            reader.onerror = error => rej(error);
+            reader.readAsDataURL(file);
+        });
     }
 }
 

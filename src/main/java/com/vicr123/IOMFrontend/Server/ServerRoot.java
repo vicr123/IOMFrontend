@@ -117,51 +117,55 @@ public class ServerRoot {
         }
 
         @DynExpress(context = "/maps", method = RequestMethod.POST)
-        public void addMap(Request req, Response res) throws SQLException, IOException, NoSuchAlgorithmException {
-            Player player = (Player) req.getMiddlewareContent("player");
-            if (player == null) {
-                res.sendStatus(Status._401);
-                return;
-            }
+        public void addMap(Request req, Response res) {
+            try {
+                Player player = (Player) req.getMiddlewareContent("player");
+                if (player == null) {
+                    res.sendStatus(Status._401);
+                    return;
+                }
 
-            Gson gson = new Gson();
-            MapData mapData = gson.fromJson(new InputStreamReader(req.getBody()), MapData.class);
+                Gson gson = new Gson();
+                MapData mapData = gson.fromJson(new InputStreamReader(req.getBody()), MapData.class);
 
-            String imageHash = images.putImage(Base64.getDecoder().decode(mapData.image));
+                String imageHash = images.putImage(Base64.getDecoder().decode(mapData.image));
 
-            Map map = new Map();
-            map.setName(mapData.name);
-            map.setAssociatedPlayer(player.getUniqueId().toString());
-            map.setPictureResource(imageHash);
-            map.setCategory(mapData.category);
+                Map map = new Map();
+                map.setName(mapData.name);
+                map.setAssociatedPlayer(player.getUniqueId().toString());
+                map.setPictureResource(imageHash);
+                map.setCategory(mapData.category);
 
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    ImageRendererExecutor.render(new URL("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0, new WorkerCallback<ImageMap>() {
-                        @Override
-                        public void finished(ImageMap imageMap) {
-                            try {
-                                imageMap.rename(mapData.name);
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                    try {
+                        ImageRendererExecutor.render(new URL("http://localhost:" + plugin.getConfig().getInt("port") + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0, new WorkerCallback<ImageMap>() {
+                            @Override
+                            public void finished(ImageMap imageMap) {
+                                try {
+                                    imageMap.rename(mapData.name);
 
-                                map.setId(imageMap.getMapsIDs()[0]);
-                                db.getMapDao().create(map);
-                                res.sendStatus(Status._201);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
+                                    map.setId(imageMap.getMapsIDs()[0]);
+                                    db.getMapDao().create(map);
+                                    res.sendStatus(Status._201);
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                    res.sendStatus(Status._500);
+                                }
+                            }
+
+                            @Override
+                            public void errored(Throwable throwable) {
                                 res.sendStatus(Status._500);
                             }
-                        }
-
-                        @Override
-                        public void errored(Throwable throwable) {
-                            res.sendStatus(Status._500);
-                        }
-                    });
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                    res.sendStatus(Status._500);
-                }
-            });
+                        });
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                        res.sendStatus(Status._500);
+                    }
+                });
+            } catch (Exception e) {
+                res.sendStatus(Status._500);
+            }
         }
 
         @DynExpress(context = "/maps/:id", method = RequestMethod.PUT)
@@ -201,7 +205,7 @@ public class ServerRoot {
 
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                 try {
-                    ImageRendererExecutor.update(new URL("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), imageMap, 0, 0, new WorkerCallback<ImageMap>() {
+                    ImageRendererExecutor.update(new URL("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), imageMap, 0, 0, new WorkerCallback<>() {
                         @Override
                         public void finished(ImageMap imageMap) {
                             try {
@@ -218,6 +222,7 @@ public class ServerRoot {
 
                         @Override
                         public void errored(Throwable throwable) {
+                            throwable.printStackTrace();
                             res.sendStatus(Status._500);
                         }
                     });
