@@ -12,15 +12,28 @@ class MapItem extends React.Component {
         };
     }
 
+    renderButtons() {
+        let buttons = [];
+        buttons.push(<button onClick={this.giveMap.bind(this)} key={"get"}>Get</button>);
+
+        if (this.props.isCollection) {
+            if (this.props.data.isOwner) buttons.push(<button onClick={this.removeCollection.bind(this)} key={"removeFromCollection"}>Remove from Collection</button>)
+        } else {
+            buttons.push(<button onClick={this.setCatg.bind(this)} key={"recategorise"}>Recategorise</button>);
+            buttons.push(<button onClick={this.addCollection.bind(this)} key={"addToCollection"}>Add to Collection</button>);
+            buttons.push(<button onClick={this.setName.bind(this)} key={"rename"}>Rename</button>);
+            buttons.push(<button onClick={this.deleteMap.bind(this)} key={"delete"}>Delete</button>);
+        }
+
+        return buttons;
+    }
+
     render() {
         return <div draggable={true} className={[Styles.MapItem, this.state.dragging ? Styles.Dragging : ""].join(" ")} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)} onDragStart={this.dragStart.bind(this)}>
             <img className={Styles.MapImage} src={this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`} />
             <span>{this.props.data.name}</span>
             <div>
-                <button onClick={this.giveMap.bind(this)}>Get</button>
-                <button onClick={this.setCatg.bind(this)}>Recategorise</button>
-                <button onClick={this.setName.bind(this)}>Rename</button>
-                <button onClick={this.deleteMap.bind(this)}>Delete</button>
+                {this.renderButtons()}
             </div>
         </div>
     }
@@ -28,6 +41,12 @@ class MapItem extends React.Component {
     async deleteMap() {
         if (window.confirm("Delete this map? Any mapsigns remaining on the world will cease to function correctly.")) {
             await this.props.manager.deleteMap(this.props.data.id);
+        }
+    }
+
+    async removeCollection() {
+        if (window.confirm("Remove this map from the collection? Any placed maps will stay active.")) {
+            await this.props.manager.deleteCollection(this.props.data.id, this.props.collection);
         }
     }
 
@@ -40,6 +59,11 @@ class MapItem extends React.Component {
         if (catg !== null) await this.props.manager.setCatg(this.props.data.id, catg);
     }
 
+    async addCollection() {
+        let collection = prompt("Name of collection to add to:", this.props.data.category);
+        if (collection !== null) await this.props.manager.addToCollection(this.props.data.id, collection);
+    }
+
     async setName() {
         let name = prompt("Name of this map:", this.props.data.name);
         if (name !== null) await this.props.manager.setName(this.props.data.id, name);
@@ -47,6 +71,7 @@ class MapItem extends React.Component {
 
     dragStart(e) {
         e.dataTransfer.setData("application/x.vicr123.iomfrontend.mapid", this.props.data.id);
+        e.dataTransfer.setData("application/x.vicr123.iomfromtend.maporigin", this.props.isCollection ? "collection" : "category");
         e.dataTransfer.dropEffect = "move";
     }
 

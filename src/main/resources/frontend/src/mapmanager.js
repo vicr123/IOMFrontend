@@ -41,6 +41,18 @@ class MapManager {
         }
     }
 
+    async deleteCollection(id, collection) {
+        Scrim.mount();
+        try {
+            await Fetch.delete(`/maps/${id}/collection/${encodeURIComponent(collection)}`);
+            await this.#onUpdateListener();
+        } catch (e) {
+            throw e;
+        } finally {
+            Scrim.unmount();
+        }
+    }
+
     async giveMap(id) {
         await Fetch.get(`/maps/${id}/give`)
     }
@@ -50,6 +62,20 @@ class MapManager {
         try {
             await Fetch.post(`/maps/${id}/category`, {
                 category: catg
+            });
+            await this.#onUpdateListener();
+        } catch (e) {
+            throw e;
+        } finally {
+            Scrim.unmount();
+        }
+    }
+
+    async addToCollection(id, collection) {
+        Scrim.mount();
+        try {
+            await Fetch.post(`/maps/${id}/collection`, {
+                name: collection
             });
             await this.#onUpdateListener();
         } catch (e) {

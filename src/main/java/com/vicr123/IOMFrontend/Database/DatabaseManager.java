@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 public class DatabaseManager {
     private Dao<Map, Long> mapDao;
+    private Dao<CollectionEntry, Long> collectionMapDao;
 
     public DatabaseManager() {
         try {
@@ -16,6 +17,9 @@ public class DatabaseManager {
 
             TableUtils.createTableIfNotExists(connectionSource, Map.class);
             mapDao = DaoManager.createDao(connectionSource, Map.class);
+
+            TableUtils.createTableIfNotExists(connectionSource, CollectionEntry.class);
+            collectionMapDao = DaoManager.createDao(connectionSource, CollectionEntry.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -23,5 +27,9 @@ public class DatabaseManager {
 
     public Dao<Map, Long> getMapDao() {
         return mapDao;
+    }
+
+    public Dao<CollectionEntry, Long> getCollectionMapDao() {
+        return collectionMapDao;
     }
 }

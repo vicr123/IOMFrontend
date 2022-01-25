@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.vicr123.IOMFrontend.Database.CollectionEntry;
 import com.vicr123.IOMFrontend.Database.DatabaseManager;
 import com.vicr123.IOMFrontend.Database.Map;
 import com.vicr123.IOMFrontend.IOMFrontendPlugin;
@@ -27,6 +28,7 @@ import fr.moribus.imageonmap.map.PosterMap;
 import fr.zcraft.imageonmap.quartzlib.components.worker.WorkerCallback;
 import org.bukkit.entity.Player;
 
+import javax.naming.Context;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,6 +37,8 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class ServerRoot {
     private final IOMFrontendPlugin plugin;
@@ -46,6 +50,10 @@ public class ServerRoot {
         String name;
         String image;
         String category;
+    }
+
+    static class CollectionData {
+        String name;
     }
 
     public ServerRoot(IOMFrontendPlugin plugin, DatabaseManager db, ImageManager images) {
@@ -102,12 +110,7 @@ public class ServerRoot {
 
             List<Map> maps = db.getMapDao().queryForEq("associatedPlayer", player.getUniqueId().toString());
             for (Map map : maps) {
-                JsonObject obj = new JsonObject();
-                obj.addProperty("name", map.getName());
-                obj.addProperty("pictureResource", map.getPictureResource());
-                obj.addProperty("id", map.getId());
-                obj.addProperty("category", map.getCategory());
-                rootArray.add(obj);
+                MapToJsonArray(rootArray, map, player);
             }
 
             ImageMap[] mapsArray = MapManager.getMaps(player.getUniqueId());
@@ -146,6 +149,11 @@ public class ServerRoot {
 
                                     map.setId(imageMap.getMapsIDs()[0]);
                                     db.getMapDao().create(map);
+
+                                    JsonObject obj = new JsonObject();
+                                    obj.addProperty("id", map.getId());
+
+                                    res.send(gson.toJson(obj));
                                     res.sendStatus(Status._201);
                                 } catch (SQLException e) {
                                     e.printStackTrace();
@@ -349,7 +357,7 @@ public class ServerRoot {
                 return;
             }
 
-            if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString())) {
+            if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString()) || db.getCollectionMapDao().queryForEq("map_id", map.getId()).isEmpty()) {
                 res.sendStatus(Status._403);
                 return;
             }
@@ -364,6 +372,78 @@ public class ServerRoot {
             });
         }
 
+        @DynExpress(context = "/maps/:id/collection", method = RequestMethod.POST)
+        public void addMapToCollection(Request req, Response res) {
+            try {
+                Player player = (Player) req.getMiddlewareContent("player");
+                if (player == null) {
+                    res.sendStatus(Status._401);
+                    return;
+                }
+
+                Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
+                if (map == null) {
+                    res.sendStatus(Status._404);
+                    return;
+                }
+
+                if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString())) {
+                    res.sendStatus(Status._403);
+                    return;
+                }
+
+                Gson gson = new Gson();
+                CollectionData collectionData = gson.fromJson(new InputStreamReader(req.getBody()), CollectionData.class);
+
+                CollectionEntry entry = new CollectionEntry();
+                entry.setName(collectionData.name);
+                entry.setMap(map);
+                db.getCollectionMapDao().create(entry);
+
+                res.sendStatus(Status._201);
+            } catch (Exception e) {
+                res.sendStatus(Status._500);
+            }
+        }
+
+        @DynExpress(context = "/maps/:id/collection/:collectionName", method = RequestMethod.DELETE)
+        public void removeMapFromCollection(Request req, Response res) {
+            try {
+                Player player = (Player) req.getMiddlewareContent("player");
+                if (player == null) {
+                    res.sendStatus(Status._401);
+                    return;
+                }
+
+                Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
+                if (map == null) {
+                    res.sendStatus(Status._404);
+                    return;
+                }
+
+                if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString())) {
+                    res.sendStatus(Status._403);
+                    return;
+                }
+
+                List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForFieldValues(java.util.Map.of(
+                        "name", req.getParam("collectionName"),
+                        "map_id", map.getId()
+                ));
+
+                if (toDelete.isEmpty()) {
+                    res.sendStatus(Status._404);
+                    return;
+                }
+
+                db.getCollectionMapDao().delete(toDelete);
+
+                res.sendStatus(Status._204);
+            } catch (Exception e) {
+                res.sendStatus(Status._500);
+            }
+        }
+
         @DynExpress(context = "/images/:hash", method = RequestMethod.GET)
         public void getImage(Request req, Response res) {
             try {
@@ -371,6 +451,47 @@ public class ServerRoot {
             } catch (IOException e) {
                 res.sendStatus(Status._404);
             }
+        }
+
+        @DynExpress(context = "/collections")
+        public void getCollections(Request req, Response res) {
+            try {
+                Player player = (Player) req.getMiddlewareContent("player");
+                if (player == null) {
+                    res.sendStatus(Status._401);
+                    return;
+                }
+
+                java.util.Map<String, List<CollectionEntry>> collections = new HashMap<>();
+                for (CollectionEntry collectionEntry : db.getCollectionMapDao().queryForAll()) {
+                    collections.computeIfAbsent(collectionEntry.getName(), k -> new ArrayList<>()).add(collectionEntry);
+                }
+
+                JsonObject obj = new JsonObject();
+                collections.forEach((collection, collectionEntries) -> {
+                    JsonArray array = new JsonArray();
+                    collectionEntries.stream().map(CollectionEntry::getMap).forEach(map -> {
+                        MapToJsonArray(array, map, player);
+                    });
+
+                    obj.add(collection, array);
+                });
+
+                Gson gson = new Gson();
+                res.send(gson.toJson(obj));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void MapToJsonArray(JsonArray array, Map map, Player currentPlayer) {
+            JsonObject mapObj = new JsonObject();
+            mapObj.addProperty("name", map.getName());
+            mapObj.addProperty("pictureResource", map.getPictureResource());
+            mapObj.addProperty("id", map.getId());
+            mapObj.addProperty("category", map.getCategory());
+            mapObj.addProperty("isOwner", currentPlayer.getUniqueId().toString().equals(map.getAssociatedPlayer()));
+            array.add(mapObj);
         }
     }
 

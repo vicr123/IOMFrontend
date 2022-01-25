@@ -33,10 +33,12 @@ public class IOMCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("This command can only be run by a player.");
             return false;
         }
+
+        Player player = (Player) sender;
 
         sender.sendMessage("Syncing maps...");
 

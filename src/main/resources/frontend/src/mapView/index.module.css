@@ -1,0 +1,23 @@
+.MainContainer {
+    display: grid;
+    grid-template-columns: 500px 1fr;
+    grid-template-rows: min-content min-content;
+    gap: 0px 0px;
+    grid-template-areas:
+        "sidebar local-maps"
+        "sidebar global-maps";
+}
+
+.LocalMaps {
+    grid-area: local-maps;
+}
+
+.GlobalMaps {
+    grid-area: global-maps;
+}
+
+.SectionHeader {
+    padding: 9px;
+    font-size: 15pt;
+    background-color: rgb(80, 80, 80);
+}

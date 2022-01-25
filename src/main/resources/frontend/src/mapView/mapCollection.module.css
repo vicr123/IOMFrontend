@@ -1,0 +1,33 @@
+.CollectionRoot {
+
+}
+
+.CollectionHeader {
+    background: white;
+    color: rgb(40, 40, 40);
+    padding: 3px;
+    text-transform: uppercase;
+
+    display: flex;
+    align-items: center;
+}
+
+.CollectionItems {
+    display: grid;
+    grid-auto-columns: 300px;
+    gap: 9px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    padding: 9px;
+    grid-auto-flow: row;
+    margin: 3px;
+}
+
+.Dragging {
+    border: 3px solid aqua;
+    margin: 0px;
+    background-clip: padding-box;
+}
+
+.Disclosure {
+    height: 24px;
+}

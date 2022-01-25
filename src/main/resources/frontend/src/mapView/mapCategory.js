@@ -16,12 +16,20 @@ class MapCategory extends React.Component {
         };
     }
 
+    static categoryName(category) {
+        return category || "No Category";
+    }
+
+    static categoryLinkName(category) {
+        return this.categoryName(category).replace(" ", "-");
+    }
 
     render() {
         return <div className={Styles.CategoryRoot} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)}>
             <div className={Styles.CategoryHeader} onClick={this.toggleCollapse.bind(this)}>
                 <img className={Styles.Disclosure} src={this.state.collapsed ? Disclosure : Disclosed}/>
-                {this.props.category || "No Category"}
+                <a name={MapCategory.categoryLinkName(this.props.category)} />
+                {MapCategory.categoryName(this.props.category)}
             </div>
             {this.renderMaps()}
         </div>
@@ -31,7 +39,7 @@ class MapCategory extends React.Component {
         if (this.state.collapsed) return null;
 
         return <div className={[Styles.CategoryItems, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
-                {this.props.data.filter(map => map.category ? map.category === this.props.category : !this.props.category).map(map => <MapItem manager={this.props.manager} key={map.id} data={map} />)}
+                {this.props.data.filter(map => map.category ? map.category === this.props.category : !this.props.category).map(map => <MapItem isCollection={false} manager={this.props.manager} key={map.id} data={map} />)}
                 <NewMapItemSelector manager={this.props.manager} category={this.props.category} />
         </div>
     }
@@ -78,8 +86,10 @@ class MapCategory extends React.Component {
         let transfer = e.dataTransfer;
 
         if (transfer.types.includes("application/x.vicr123.iomfrontend.mapid")) {
-            //Moving between categories
-            this.props.manager.setCatg(transfer.getData("application/x.vicr123.iomfrontend.mapid"), this.props.category);
+            if (transfer.getData("application/x.vicr123.iomfrontend.maporigin") === "category") {
+                //Moving between categories
+                this.props.manager.setCatg(transfer.getData("application/x.vicr123.iomfrontend.mapid"), this.props.category);
+            }
         } else {
             //Dropping files
             this.props.manager.uploadMaps(

@@ -3,6 +3,10 @@ import Fetch from "../fetch";
 import MapCategory from "./mapCategory";
 import MapManager from "../mapmanager";
 
+import Styles from "./index.module.css";
+import Sidebar from "./sidebar";
+import MapCollection from "./mapCollection";
+
 class MapView extends React.Component {
     constructor(props) {
         super(props);
@@ -20,7 +24,8 @@ class MapView extends React.Component {
     async updateData() {
         try {
             this.setState({
-                data: await Fetch.get("/maps")
+                data: await Fetch.get("/maps"),
+                collections: await Fetch.get("/collections")
             })
         } catch (e) {
             this.setState({
@@ -35,8 +40,16 @@ class MapView extends React.Component {
                 Please reload
             </div>
         } else if (this.state.data) {
-            return <div>
-                {["", ...this.state.data.map(map => map.category ? map.category : "").filter(category => category !== "")].filter((category, index, array) => array.indexOf(category) === index).map(category => <MapCategory manager={this.mapManager} category={category} key={category} data={this.state.data}/>)}
+            return <div className={Styles.MainContainer}>
+                <Sidebar manager={this.mapManager} data={this.state.data} collections={this.state.collections} />
+                <div className={Styles.LocalMaps}>
+                    <div className={Styles.SectionHeader}>My Maps</div>
+                    {["", ...this.state.data.map(map => map.category ? map.category : "").filter(category => category !== "")].filter((category, index, array) => array.indexOf(category) === index).map(category => <MapCategory manager={this.mapManager} category={category} key={category} data={this.state.data}/>)}
+                </div>
+                <div className={Styles.GlobalMaps}>
+                    <div className={Styles.SectionHeader}>Global Collections</div>
+                    {Object.keys(this.state.collections).map(collection => <MapCollection manager={this.mapManager} collection={collection} key={collection} data={this.state.collections[collection]} />)}
+                </div>
             </div>
         } else {
             return <div>
