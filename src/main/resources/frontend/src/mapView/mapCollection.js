@@ -21,7 +21,7 @@ class MapCollection extends React.Component {
     }
 
     static collectionLinkName(collection) {
-        return this.collectionName(collection).replace(" ", "-");
+        return "col-" + this.collectionName(collection).replace(" ", "-");
     }
 
     render() {

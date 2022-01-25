@@ -21,7 +21,7 @@ class MapCategory extends React.Component {
     }
 
     static categoryLinkName(category) {
-        return this.categoryName(category).replace(" ", "-");
+        return "cat-" + this.categoryName(category).replace(" ", "-");
     }
 
     render() {

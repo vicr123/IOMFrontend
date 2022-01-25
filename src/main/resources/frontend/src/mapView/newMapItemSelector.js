@@ -13,7 +13,7 @@ class NewMapItemSelector extends React.Component {
         return <div className={Styles.SelectorRoot} onClick={this.onClick.bind(this)}>
             <div className={Styles.AddPicture} />
             Add Map
-            <input className={Styles.FileSelector} type={"file"} accept={"image/png"} onChange={this.onChange.bind(this)} ref={this.fileSelector} multiple={true} />
+            <input className={Styles.FileSelector} type={"file"} accept={"image/png,image/svg+xml"} onChange={this.onChange.bind(this)} ref={this.fileSelector} multiple={true} />
         </div>
     }
 

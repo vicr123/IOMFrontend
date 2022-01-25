@@ -335,6 +335,10 @@ public class ServerRoot {
                         MapManager.deleteMap(imageMap);
                     }
 
+                    //Remove the map from all collections
+                    List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForAll().stream().filter(collectionEntry -> collectionEntry.getMap().getId() == map.getId()).collect(Collectors.toList());
+                    if (!toDelete.isEmpty()) db.getCollectionMapDao().delete(toDelete);
+
                     db.getMapDao().delete(map);
                     res.sendStatus(Status._204);
                 } catch (SQLException | MapManagerException throwables) {
@@ -351,23 +355,20 @@ public class ServerRoot {
                 return;
             }
 
-            Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
+            long mapId = Long.parseLong(req.getParam("id"));
+            Map map = db.getMapDao().queryForId(mapId);
             if (map == null) {
                 res.sendStatus(Status._404);
                 return;
             }
 
-            if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString()) || db.getCollectionMapDao().queryForEq("map_id", map.getId()).isEmpty()) {
-                res.sendStatus(Status._403);
-                return;
-            }
+//            if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString()) || db.getCollectionMapDao().queryForEq("map_id", mapId).isEmpty()) {
+//                res.sendStatus(Status._403);
+//                return;
+//            }
 
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
-                if (imageMap != null) {
-                    imageMap.give(player);
-                }
-
+                Arrays.stream(MapManager.getMaps(UUID.fromString(map.getAssociatedPlayer()))).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().ifPresent(imageMap -> imageMap.give(player));
                 res.sendStatus(Status._204);
             });
         }
@@ -415,7 +416,8 @@ public class ServerRoot {
                     return;
                 }
 
-                Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
+                long mapId = Long.parseLong(req.getParam("id"));
+                Map map = db.getMapDao().queryForId(mapId);
                 if (map == null) {
                     res.sendStatus(Status._404);
                     return;
@@ -428,7 +430,7 @@ public class ServerRoot {
 
                 List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForFieldValues(java.util.Map.of(
                         "name", req.getParam("collectionName"),
-                        "map_id", map.getId()
+                        "map_id", mapId
                 ));
 
                 if (toDelete.isEmpty()) {

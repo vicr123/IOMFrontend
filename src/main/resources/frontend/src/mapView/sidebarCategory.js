@@ -2,6 +2,7 @@ import React from "react";
 
 import Styles from "./sidebarCategory.module.css";
 import MapCategory from "./mapCategory";
+import MapCollection from "./mapCollection";
 
 class SidebarCategory extends React.Component {
     constructor(props) {
@@ -19,7 +20,7 @@ class SidebarCategory extends React.Component {
     }
 
     render() {
-        return <a className={Styles.SidebarLink} href={`#${MapCategory.categoryLinkName(this.props.category)}`} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)}>
+        return <a className={Styles.SidebarLink} href={`#${this.props.isCollection ? MapCollection.collectionLinkName(this.props.category) : MapCategory.categoryLinkName(this.props.category)}`} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)}>
             <div className={this.calculateClass()}>
                 {MapCategory.categoryName(this.props.category)}
             </div>

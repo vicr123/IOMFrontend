@@ -39,7 +39,7 @@ class MapItem extends React.Component {
     }
 
     async deleteMap() {
-        if (window.confirm("Delete this map? Any mapsigns remaining on the world will cease to function correctly.")) {
+        if (window.confirm("Delete this map? Any mapsigns remaining on the world will cease to function correctly, and the map will be deleted from all public collections as well.")) {
             await this.props.manager.deleteMap(this.props.data.id);
         }
     }
@@ -71,7 +71,7 @@ class MapItem extends React.Component {
 
     dragStart(e) {
         e.dataTransfer.setData("application/x.vicr123.iomfrontend.mapid", this.props.data.id);
-        e.dataTransfer.setData("application/x.vicr123.iomfromtend.maporigin", this.props.isCollection ? "collection" : "category");
+        e.dataTransfer.setData("application/x.vicr123.iomfrontend.maporigin", this.props.isCollection ? "collection" : "category");
         e.dataTransfer.dropEffect = "move";
     }
 
