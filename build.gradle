@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
     implementation 'com.google.code.gson:gson:2.8.8'
 
-    compileOnly files('ImageOnMap-4.1.2.jar')
+    compileOnly files('ImageOnMap-4.2.2.jar')
 }
 
 test {
