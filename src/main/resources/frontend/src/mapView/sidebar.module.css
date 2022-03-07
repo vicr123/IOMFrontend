@@ -16,3 +16,10 @@
     font-size: 15pt;
     background-color: rgb(80, 80, 80);
 }
+
+.SearchArea {
+    padding: 9px;
+    border: none;
+    background-color: rgb(60, 60, 60);
+    color: white;
+}

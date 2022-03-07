@@ -1,0 +1,19 @@
+.Toast {
+    position: fixed;
+    background-color: rgb(40, 40, 40);
+
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 9px;
+    border-top: 1px solid white;
+}
+
+.title {
+    font-weight: bold;
+    padding-right: 9px;
+}
+
+.text {
+
+}

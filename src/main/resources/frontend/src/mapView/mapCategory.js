@@ -39,7 +39,7 @@ class MapCategory extends React.Component {
         if (this.state.collapsed) return null;
 
         return <div className={[Styles.CategoryItems, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
-                {this.props.data.filter(map => map.category ? map.category === this.props.category : !this.props.category).map(map => <MapItem isCollection={false} manager={this.props.manager} key={map.id} data={map} />)}
+                {this.props.data.filter(map => map.category ? map.category === this.props.category : !this.props.category).filter(this.props.onFilter).map(map => <MapItem isCollection={false} manager={this.props.manager} key={map.id} data={map} />)}
                 <NewMapItemSelector manager={this.props.manager} category={this.props.category} />
         </div>
     }

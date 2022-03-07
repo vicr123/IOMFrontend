@@ -38,9 +38,16 @@ class MapCollection extends React.Component {
     renderMaps() {
         if (this.state.collapsed) return null;
 
-        return <div className={[Styles.CollectionItems, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
-                {this.props.data.map(map => <MapItem isCollection={true} collection={this.props.collection} manager={this.props.manager} key={map.id} data={map} />)}
-        </div>
+        let maps = this.props.data.filter(this.props.onFilter).map(map => <MapItem isCollection={true} collection={this.props.collection} manager={this.props.manager} key={map.id} data={map} />);
+        if (maps.length === 0) {
+            return <div className={[Styles.CollectionItems, Styles.Empty, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
+                No items match your search
+            </div>
+        } else {
+            return <div className={[Styles.CollectionItems, this.state.dragging ? Styles.Dragging : ""].join(" ")}>
+                {maps}
+            </div>
+        }
     }
 
     toggleCollapse() {

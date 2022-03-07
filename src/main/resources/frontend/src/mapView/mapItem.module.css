@@ -1,8 +1,8 @@
 .MapItem {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 3px;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    cursor: pointer;
 }
 
 .MapImage {
@@ -13,4 +13,35 @@
     border: 3px solid aqua;
     margin: 0px;
     background-clip: padding-box;
+}
+
+.buttonSidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 100));
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ActionsTitle {
+    font-weight: bold;
+    text-align: right;
+    padding: 9px;
+}
+
+.MapItem span {
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 9px;
+    font-size: 15pt;
+    transition: opacity 0.25s ease-out;
+}
+
+.MapItem:hover span {
+    opacity: 1;
 }

@@ -1,0 +1,11 @@
+.DropTarget {
+    text-align: right;
+    padding: 9px;
+
+    z-index: 9000;
+}
+
+.Dragging {
+    background-color: white;
+    color: black;
+}

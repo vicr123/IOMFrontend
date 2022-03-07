@@ -14,11 +14,11 @@
 
 .CollectionItems {
     display: grid;
-    grid-auto-columns: 300px;
-    gap: 9px;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    padding: 9px;
+    grid-auto-columns: 128px;
+    /*gap: 9px;*/
     grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    padding: 9px;
     margin: 3px;
 }
 
@@ -30,4 +30,8 @@
 
 .Disclosure {
     height: 24px;
+}
+
+.Empty {
+    display: block;
 }
