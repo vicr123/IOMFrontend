@@ -42,6 +42,8 @@ class MapItemDropTarget extends React.Component {
     }
 
     drop(e) {
+        e.preventDefault();
+        e.stopPropagation();
         this.props.onClick();
     }
 }

@@ -66,9 +66,9 @@ class MapItem extends React.Component {
                      onClick={this.click.bind(this)}
                      style={{
                          background: `linear-gradient(to right,rgba(0, 0, 0, 0.2),rgba(0, 0, 0, 0.2)),url(${this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`}) no-repeat center/cover`,
-                         aspectRatio: `${this.state.width} / ${this.state.height}`,
-                         gridColumn: `span ${this.state.width}`,
-                         gridRow: `span ${this.state.height}`,
+                         aspectRatio: `${Math.min(this.state.width, 5)} / ${Math.min(this.state.height, 5)}`,
+                         gridColumn: `span ${Math.min(this.state.width, 5)}`,
+                         gridRow: `span ${Math.min(this.state.height, 5)}`,
                          // width: this.state.width * 2,
                          // height: this.state.height * 2
                      }}

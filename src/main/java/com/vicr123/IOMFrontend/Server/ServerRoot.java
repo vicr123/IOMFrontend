@@ -25,7 +25,6 @@ import fr.moribus.imageonmap.map.ImageMap;
 import fr.moribus.imageonmap.map.MapManager;
 import fr.moribus.imageonmap.map.MapManagerException;
 import fr.moribus.imageonmap.map.PosterMap;
-import fr.zcraft.imageonmap.quartzlib.components.worker.WorkerCallback;
 import org.bukkit.entity.Player;
 
 import javax.naming.Context;
@@ -141,30 +140,27 @@ public class ServerRoot {
 
                 plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                     try {
-                        ImageRendererExecutor.render(new URL("http://localhost:" + plugin.getConfig().getInt("port") + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0, new WorkerCallback<ImageMap>() {
-                            @Override
-                            public void finished(ImageMap imageMap) {
-                                try {
-                                    imageMap.rename(mapData.name);
+                        ImageRendererExecutor.render(new URL("http://localhost:" + plugin.getConfig().getInt("port") + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0).thenAccept(imageMap -> {
+                            MapManager.save();
 
-                                    map.setId(imageMap.getMapsIDs()[0]);
-                                    db.getMapDao().create(map);
+                            try {
+                                imageMap.rename(mapData.name);
 
-                                    JsonObject obj = new JsonObject();
-                                    obj.addProperty("id", map.getId());
+                                map.setId(imageMap.getMapsIDs()[0]);
+                                db.getMapDao().create(map);
 
-                                    res.send(gson.toJson(obj));
-                                    res.sendStatus(Status._201);
-                                } catch (SQLException e) {
-                                    e.printStackTrace();
-                                    res.sendStatus(Status._500);
-                                }
-                            }
+                                JsonObject obj = new JsonObject();
+                                obj.addProperty("id", map.getId());
 
-                            @Override
-                            public void errored(Throwable throwable) {
+                                res.send(gson.toJson(obj));
+                                res.sendStatus(Status._201);
+                            } catch (SQLException e) {
+                                e.printStackTrace();
                                 res.sendStatus(Status._500);
                             }
+                        }).exceptionally(throwable -> {
+                            res.sendStatus(Status._500);
+                            return null;
                         });
                     } catch (MalformedURLException e) {
                         e.printStackTrace();
@@ -213,26 +209,23 @@ public class ServerRoot {
 
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                 try {
-                    ImageRendererExecutor.update(new URL("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), imageMap, 0, 0, new WorkerCallback<>() {
-                        @Override
-                        public void finished(ImageMap imageMap) {
-                            try {
-                                map.setPictureResource(imageHash);
-                                map.setId(imageMap.getMapsIDs()[0]);
+                    ImageRendererExecutor.update(new URL("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + imageHash), ImageUtils.ScalingType.NONE, player.getUniqueId(), imageMap, 0, 0).thenAccept(imageMap1 -> {
+                        MapManager.save();
 
-                                db.getMapDao().update(map);
-                                res.sendStatus(Status._204);
-                            } catch (SQLException throwables) {
-                                throwables.printStackTrace();
-                                res.sendStatus(Status._500);
-                            }
-                        }
+                        try {
+                            map.setPictureResource(imageHash);
+                            map.setId(imageMap.getMapsIDs()[0]);
 
-                        @Override
-                        public void errored(Throwable throwable) {
-                            throwable.printStackTrace();
+                            db.getMapDao().update(map);
+                            res.sendStatus(Status._204);
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
                             res.sendStatus(Status._500);
                         }
+                    }).exceptionally(throwable -> {
+                        throwable.printStackTrace();
+                        res.sendStatus(Status._500);
+                        return null;
                     });
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -449,6 +442,7 @@ public class ServerRoot {
         @DynExpress(context = "/images/:hash", method = RequestMethod.GET)
         public void getImage(Request req, Response res) {
             try {
+                res.setHeader("Cache-Control", "public, max-age=31536000");
                 res.sendBytes(images.getImage(req.getParam("hash")).readAllBytes());
             } catch (IOException e) {
                 res.sendStatus(Status._404);
@@ -482,6 +476,8 @@ public class ServerRoot {
                 Gson gson = new Gson();
                 res.send(gson.toJson(obj));
             } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
                 e.printStackTrace();
             }
         }
