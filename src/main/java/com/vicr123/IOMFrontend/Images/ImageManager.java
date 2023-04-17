@@ -28,6 +28,10 @@ public class ImageManager {
         return new FileInputStream(file);
     }
 
+    public String getImageUrl(String hash) {
+        return "http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + hash;
+    }
+
     public String putImage(byte[] imageData) throws IOException, NoSuchAlgorithmException {
         if (imageData.length > 4 && imageData[0] == (byte) 0x89 && imageData[1] == (byte) 0x50 && imageData[2] == (byte) 0x4E && imageData[3] == (byte) 0x47) {
             //This is already a PNG file

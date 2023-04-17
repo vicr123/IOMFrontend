@@ -116,6 +116,20 @@ class MapManager {
         }
     }
 
+    async createRotondo(id) {
+        Scrim.mount();
+        try {
+            await Fetch.post(`/maps/${id}/rotondo`, {
+
+            });
+            await this.#onUpdateListener();
+        } catch (e) {
+            throw e;
+        } finally {
+            Scrim.unmount();
+        }
+    }
+
     getImage(file) {
         return new Promise((res, rej) => {
             let reader = new FileReader();

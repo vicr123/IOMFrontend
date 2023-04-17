@@ -1,7 +1,4 @@
 .MapItem {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: flex-start;
     cursor: pointer;
     overflow: hidden;
 }
@@ -46,3 +43,48 @@
 .MapItem:hover span {
     opacity: 1;
 }
+
+.MapItemInfo {
+    position: absolute;
+
+    pointer-events: none;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+}
+
+.MapItemRotondo {
+    cursor: default;
+}
+
+.MapItemRotondoSelect {
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 0px 0px;
+    grid-template-areas:
+        ". north ."
+        "west . east"
+        ". south .";
+}
+
+.MapItemRotondoItem {
+    display: none;
+    cursor: pointer;
+    background-color: rgb(0, 0, 0, 0.8);
+
+    align-items: center;
+    justify-content: center;
+}
+
+.MapItemRotondoSelect:hover .MapItemRotondoItem {
+    display: flex;
+}
+
+.North { grid-area: north; }
+.East { grid-area: east; }
+.South { grid-area: south; }
+.West { grid-area: west; }

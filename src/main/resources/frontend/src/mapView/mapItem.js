@@ -26,6 +26,9 @@ class MapItem extends React.Component {
             } else {
                 buttons.push(<MapItemDropTarget onClick={this.setCatg.bind(this)} key={"recategorise"}>Recategorise</MapItemDropTarget>);
                 buttons.push(<MapItemDropTarget onClick={this.addCollection.bind(this)} key={"addToCollection"}>Add to Collection</MapItemDropTarget>);
+                if (Object.keys(this.props.data.rotondos).length === 0) {
+                    buttons.push(<MapItemDropTarget onClick={this.createRotondo.bind(this)} key={"rotondo"}>Convert to Rotondo Map</MapItemDropTarget>);
+                }
                 buttons.push(<MapItemDropTarget onClick={this.setName.bind(this)} key={"rename"}>Rename</MapItemDropTarget>);
                 buttons.push(<MapItemDropTarget onClick={this.deleteMap.bind(this)} key={"delete"}>Delete</MapItemDropTarget>);
             }
@@ -50,13 +53,38 @@ class MapItem extends React.Component {
         img.src = this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`;
     }
 
+    renderRotondoComponents() {
+        let rotondos = Object.keys(this.props.data.rotondos);
+        if (rotondos.length === 0) return;
+
+        rotondos.push("0");
+        let rotondoMap = this.props.data.rotondos;
+        rotondoMap["0"] = this.props.data.id;
+
+        const classes = {
+            "0": Styles.North,
+            "1": Styles.East,
+            "2": Styles.South,
+            "3": Styles.West
+        }
+
+        const rotondoNames = {
+            "0": "N",
+            "1": "E",
+            "2": "S",
+            "3": "W"
+        }
+
+        return rotondos.map(rotondoType => <div key={rotondoType} className={[classes[rotondoType], Styles.MapItemRotondoItem].join(" ")} onClick={() => this.giveRotondoMap(rotondoMap[rotondoType])}>{rotondoNames[rotondoType]}</div>);
+    }
+
     render() {
         if (this.state.width === 0) {
             return null;
         } else {
             return <>
                 <div draggable={true}
-                     className={[Styles.MapItem, this.state.dragging ? Styles.Dragging : ""].join(" ")}
+                     className={[Styles.MapItem, this.state.dragging ? Styles.Dragging : "", Object.keys(this.props.data.rotondos).length === 0 ? "" : Styles.MapItemRotondo].join(" ")}
                      onDragEnter={this.dragEnter.bind(this)}
                      onDrop={this.drop.bind(this)}
                      onDragLeave={this.dragLeave.bind(this)}
@@ -73,8 +101,13 @@ class MapItem extends React.Component {
                          // height: this.state.height * 2
                      }}
                 >
-                    <span>{this.state.height} &times; {this.state.width}</span>
-                    <span>{this.props.data.name}</span>
+                    <div className={Styles.MapItemRotondoSelect}>
+                        {this.renderRotondoComponents()}
+                    </div>
+                    <div className={Styles.MapItemInfo}>
+                        <span>{this.state.height} &times; {this.state.width} {Object.keys(this.props.data.rotondos).length === 0 ? "" : "R"}</span>
+                        <span>{this.props.data.name}</span>
+                    </div>
                 </div>
                 {this.renderButtons()}
             </>
@@ -82,6 +115,7 @@ class MapItem extends React.Component {
     }
 
     async click() {
+        if (Object.keys(this.props.data.rotondos).length !== 0) return;
         // try {
         Toast.makeToast(<Toast title={"Map Obtained"} text={"The map is now in your inventory."} />)
             await this.props.manager.giveMap(this.props.data.id);
@@ -108,6 +142,11 @@ class MapItem extends React.Component {
         await this.props.manager.giveMap(this.props.data.id);
     }
 
+    async giveRotondoMap(id) {
+        Toast.makeToast(<Toast title={"Map Obtained"} text={"The map is now in your inventory."} />)
+        await this.props.manager.giveMap(id);
+    }
+
     async setCatg() {
         let catg = prompt("Name of category for this map:", this.props.data.category);
         console.log(catg);
@@ -122,6 +161,10 @@ class MapItem extends React.Component {
     async setName() {
         let name = prompt("Name of this map:", this.props.data.name);
         if (name !== null) await this.props.manager.setName(this.props.data.id, name);
+    }
+
+    async createRotondo() {
+        await this.props.manager.createRotondo(this.props.data.id);
     }
 
     dragStart(e) {
