@@ -1,14 +1,12 @@
 package com.vicr123.IOMFrontend.Commands;
 
+import com.loohp.imageframe.ImageFrame;
 import com.vicr123.IOMFrontend.Database.DatabaseManager;
 import com.vicr123.IOMFrontend.Database.Map;
 import com.vicr123.IOMFrontend.IOMFrontendPlugin;
 import com.vicr123.IOMFrontend.Server.ServerRoot;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -18,7 +16,6 @@ import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class IOMCommand implements CommandExecutor {
     ServerRoot server;
@@ -49,7 +46,7 @@ public class IOMCommand implements CommandExecutor {
         //Delete any maps that are not found (deleted in-game)
         try {
             for (Map map : db.getMapDao().queryForEq("associatedPlayer", player.getUniqueId().toString())) {
-                ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
+                var imageMap = ImageFrame.imageMapManager.getFromCreator(player.getUniqueId()).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == map.getId())).findAny().orElse(null);
                 if (imageMap == null) toDelete.add(map);
             }
         } catch (SQLException e) {
@@ -57,12 +54,13 @@ public class IOMCommand implements CommandExecutor {
         }
 
         //Import any new maps that are not found (created in-game)
-        for (ImageMap imageMap : MapManager.getMaps(player.getUniqueId())) {
+        for (var imageMap : ImageFrame.imageMapManager.getFromCreator(player.getUniqueId())) {
             try {
-                if (db.getMapDao().queryForAll().stream().noneMatch(map -> imageMap.managesMap((int) map.getId()))) {
+                if (db.getMapDao().queryForAll().stream().noneMatch(map -> ImageFrame.imageMapManager.getFromMapId((int) map.getId()) != null) &&
+                        db.getRotondoDao().queryForAll().stream().noneMatch(rotondo -> ImageFrame.imageMapManager.getFromMapId((int) rotondo.getId()) != null)) {
                     //This map is not found
                     Map map = new Map();
-                    map.setId(imageMap.getMapsIDs()[0]);
+                    map.setId(imageMap.getMapIds().get(0));
                     map.setName(imageMap.getName());
                     map.setAssociatedPlayer(player.getUniqueId().toString());
                     map.setPictureResource("x");

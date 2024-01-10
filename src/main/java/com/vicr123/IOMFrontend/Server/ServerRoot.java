@@ -5,6 +5,10 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.loohp.imageframe.ImageFrame;
+import com.loohp.imageframe.objectholders.ImageMap;
+import com.loohp.imageframe.objectholders.URLImageMap;
+import com.loohp.imageframe.objectholders.URLStaticImageMap;
 import com.vicr123.IOMFrontend.Database.CollectionEntry;
 import com.vicr123.IOMFrontend.Database.DatabaseManager;
 import com.vicr123.IOMFrontend.Database.Map;
@@ -18,17 +22,11 @@ import express.http.request.Request;
 import express.http.response.Response;
 import express.utils.MediaType;
 import express.utils.Status;
-import fr.moribus.imageonmap.image.ImageRendererExecutor;
-import fr.moribus.imageonmap.image.ImageUtils;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.map.MapManagerException;
 import org.bukkit.entity.Player;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
@@ -164,41 +162,41 @@ public class ServerRoot {
 
                 String imageHash = images.putImage(Base64.getDecoder().decode(mapData.image));
 
+                var nonConflictName = mapData.name;
+                int suffix = 1;
+
+                while (ImageFrame.imageMapManager.getFromCreator(player.getUniqueId(), nonConflictName) != null) {
+                    nonConflictName = mapData.name + "-" + suffix;
+                    suffix++;
+                }
                 Map map = new Map();
-                map.setName(mapData.name);
+                map.setName(nonConflictName);
                 map.setAssociatedPlayer(player.getUniqueId().toString());
                 map.setPictureResource(imageHash);
                 map.setCategory(mapData.category);
 
-                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                try {
+                    var imageData = images.getImageData(imageHash);
+                    var imageMap = URLStaticImageMap.create(ImageFrame.imageMapManager, nonConflictName, imageData.getImageUrl(), imageData.getBlockWidth(), imageData.getBlockHeight(), player.getUniqueId()).get();
+                    ImageFrame.imageMapManager.addMap(imageMap);
+
                     try {
-                        ImageRendererExecutor.render(new URL(images.getImageUrl(imageHash)), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0).thenAccept(imageMap -> {
-                            MapManager.save();
+                        map.setId(imageMap.getMapIds().get(0));
+                        db.getMapDao().create(map);
 
-                            try {
-                                imageMap.rename(mapData.name);
+                        JsonObject obj = new JsonObject();
+                        obj.addProperty("id", map.getId());
 
-                                map.setId(imageMap.getMapsIDs()[0]);
-                                db.getMapDao().create(map);
-
-                                JsonObject obj = new JsonObject();
-                                obj.addProperty("id", map.getId());
-
-                                res.send(gson.toJson(obj));
-                                res.sendStatus(Status._201);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                                res.sendStatus(Status._500);
-                            }
-                        }).exceptionally(throwable -> {
-                            res.sendStatus(Status._500);
-                            return null;
-                        });
-                    } catch (MalformedURLException e) {
+                        res.send(gson.toJson(obj));
+                        res.sendStatus(Status._201);
+                    } catch (SQLException e) {
                         e.printStackTrace();
                         res.sendStatus(Status._500);
                     }
-                });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    res.sendStatus(Status._500);
+                }
             } catch (Exception e) {
                 res.sendStatus(Status._500);
             }
@@ -206,83 +204,66 @@ public class ServerRoot {
 
         @DynExpress(context = "/maps/:id", method = RequestMethod.PUT)
         public void updateMap(Request req, Response res) throws SQLException, IOException, NoSuchAlgorithmException {
-            Player player = (Player) req.getMiddlewareContent("player");
-            if (player == null) {
-                res.sendStatus(Status._401);
-                return;
-            }
-
-            Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
-            if (map == null) {
-                res.sendStatus(Status._404);
-                return;
-            }
-
-            if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString())) {
-                res.sendStatus(Status._403);
-                return;
-            }
-
-            ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
-            if (imageMap == null) {
-                res.sendStatus(Status._500);
-                return;
-            }
-
-            Gson gson = new Gson();
-            JsonObject json = gson.fromJson(new InputStreamReader(req.getBody()), JsonObject.class);
-
-            if (!json.has("image")) {
-                res.sendStatus(Status._400);
-                return;
-            }
-
-            String imageHash = images.putImage(Base64.getDecoder().decode(json.get("image").getAsString()));
-
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    ImageRendererExecutor.update(new URL(images.getImageUrl(imageHash)), ImageUtils.ScalingType.NONE, player.getUniqueId(), imageMap, 0, 0).thenAccept(imageMap1 -> {
-                        MapManager.save();
-
-                        try {
-                            map.setPictureResource(imageHash);
-                            map.setId(imageMap.getMapsIDs()[0]);
-
-                            db.getMapDao().update(map);
-                        } catch (SQLException throwables) {
-                            throwables.printStackTrace();
-                            res.sendStatus(Status._500);
-                        }
-                    }).exceptionally(throwable -> {
-                        throwable.printStackTrace();
-                        res.sendStatus(Status._500);
-                        return null;
-                    }).join();
-
-                    var rotondos =db.getRotondoDao().queryForEq("of_id", map.getId());
-                    for (var rotondo : rotondos) {
-                        //Create rotondo variants of this map
-                        var rimageHash = writeRotondo(map, rotondo.getDirection());
-                        var rMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == rotondo.getId())).findAny().orElse(null);
-                        if (rMap == null) continue;
-
-                        ImageRendererExecutor.update(new URL(images.getImageUrl(rimageHash)), ImageUtils.ScalingType.NONE, player.getUniqueId(), rMap, 0, 0).thenAccept(imageMap1 -> {
-                            MapManager.save();
-
-                            try {
-                                rotondo.setId(imageMap.getMapsIDs()[0]);
-                                db.getRotondoDao().update(rotondo);
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }).join();
-                    }
-
-                    res.sendStatus(Status._204);
-                } catch (SQLException | IOException | NoSuchAlgorithmException e) {
-                    e.printStackTrace();
+            try {
+                Player player = (Player) req.getMiddlewareContent("player");
+                if (player == null) {
+                    res.sendStatus(Status._401);
+                    return;
                 }
-            });
+
+                Map map = db.getMapDao().queryForId(Long.valueOf(req.getParam("id")));
+                if (map == null) {
+                    res.sendStatus(Status._404);
+                    return;
+                }
+
+                if (!map.getAssociatedPlayer().equals(player.getUniqueId().toString())) {
+                    res.sendStatus(Status._403);
+                    return;
+                }
+
+                var imageMap = ImageFrame.imageMapManager.getFromCreator(player.getUniqueId()).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == map.getId())).findAny().orElse(null);
+                if (imageMap == null) {
+                    res.sendStatus(Status._500);
+                    return;
+                }
+
+                Gson gson = new Gson();
+                JsonObject json = gson.fromJson(new InputStreamReader(req.getBody()), JsonObject.class);
+
+                if (!json.has("image")) {
+                    res.sendStatus(Status._400);
+                    return;
+                }
+
+                String imageHash = images.putImage(Base64.getDecoder().decode(json.get("image").getAsString()));
+
+                if (imageMap instanceof URLImageMap) {
+                    updateImageMap(imageHash, (URLImageMap) imageMap);
+                    map.setPictureResource(imageHash);
+                    map.setId(imageMap.getMapIds().get(0));
+                    db.getMapDao().update(map);
+                }
+
+                var rotondos = db.getRotondoDao().queryForEq("of_id", map.getId());
+                for (var rotondo : rotondos) {
+                    //Create rotondo variants of this map
+                    var rimageHash = writeRotondo(map, rotondo.getDirection());
+                    var rMap = ImageFrame.imageMapManager.getFromCreator(player.getUniqueId()).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == rotondo.getId())).findAny().orElse(null);
+                    if (rMap == null) continue;
+
+                    if (rMap instanceof URLImageMap) {
+                        updateImageMap(rimageHash, (URLImageMap) rMap);
+                        rotondo.setId(imageMap.getMapIds().get(0));
+                        db.getRotondoDao().update(rotondo);
+                    }
+                }
+
+                res.sendStatus(Status._204);
+            } catch (Throwable e) {
+                e.printStackTrace();
+                res.sendStatus(Status._500);
+            }
         }
 
         @DynExpress(context = "/maps/:id/rotondo", method = RequestMethod.POST)
@@ -304,50 +285,51 @@ public class ServerRoot {
                 return;
             }
 
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    //Create rotondo variants of this map
-                    for (int i = 1; i < 4; i++) {
-                        if (!db.getRotondoDao().queryForFieldValues(java.util.Map.of(
-                                "of_id", map.getId(),
-                                "direction", i
-                        )).isEmpty()) {
-                            continue;
-                        }
-
-                        var imageHash = writeRotondo(map, i);
-                        int finalI = i;
-                        ImageRendererExecutor.render(new URL(images.getImageUrl(imageHash)), ImageUtils.ScalingType.NONE, player.getUniqueId(), 0, 0).thenAccept(imageMap -> {
-                            MapManager.save();
-
-                            try {
-                                imageMap.rename(map.getName());
-
-                                var rotondo = new Rotondo();
-                                rotondo.setOf(map);
-                                rotondo.setDirection(finalI);
-                                rotondo.setId(imageMap.getMapsIDs()[0]);
-
-                                db.getRotondoDao().create(rotondo);
-
-                                JsonObject obj = new JsonObject();
-                                obj.addProperty("id", map.getId());
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                                res.sendStatus(Status._500);
-                            }
-                        }).exceptionally(throwable -> {
-                            res.sendStatus(Status._500);
-                            return null;
-                        }).join();
+            try {
+                //Create rotondo variants of this map
+                for (int i = 1; i < 4; i++) {
+                    if (!db.getRotondoDao().queryForFieldValues(java.util.Map.of(
+                            "of_id", map.getId(),
+                            "direction", i
+                    )).isEmpty()) {
+                        continue;
                     }
 
-                    res.sendStatus(Status._204);
-                } catch (IOException | SQLException | NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                    res.sendStatus(Status._500);
+                    var rotondoDirection = switch (i) {
+                        case 1 -> "E";
+                        case 2 -> "S";
+                        case 3 -> "W";
+                        default -> "";
+                    };
+
+                    var imageHash = writeRotondo(map, i);
+                    int finalI = i;
+
+                    var imageData = images.getImageData(imageHash);
+                    var imageMap = URLStaticImageMap.create(ImageFrame.imageMapManager, map.getName() + "-rotondo-" + rotondoDirection, imageData.getImageUrl(), imageData.getBlockWidth(), imageData.getBlockHeight(), player.getUniqueId()).get();
+                    ImageFrame.imageMapManager.addMap(imageMap);
+
+                    try {
+                        var rotondo = new Rotondo();
+                        rotondo.setOf(map);
+                        rotondo.setDirection(finalI);
+                        rotondo.setId(imageMap.getMapIds().get(0));
+
+                        db.getRotondoDao().create(rotondo);
+
+                        JsonObject obj = new JsonObject();
+                        obj.addProperty("id", map.getId());
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        res.sendStatus(Status._500);
+                    }
                 }
-            });
+
+                res.sendStatus(Status._204);
+            } catch (Exception e) {
+                e.printStackTrace();
+                res.sendStatus(Status._500);
+            }
         }
 
         @DynExpress(context = "/maps/:id/category", method = RequestMethod.POST)
@@ -383,7 +365,7 @@ public class ServerRoot {
         }
 
         @DynExpress(context = "/maps/:id/name", method = RequestMethod.POST)
-        public void renameMap(Request req, Response res) throws SQLException {
+        public void renameMap(Request req, Response res) throws Exception {
             Player player = (Player) req.getMiddlewareContent("player");
             if (player == null) {
                 res.sendStatus(Status._401);
@@ -408,7 +390,7 @@ public class ServerRoot {
                 return;
             }
 
-            ImageMap imageMap = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId())).findAny().orElse(null);
+            var imageMap = ImageFrame.imageMapManager.getFromCreator(player.getUniqueId()).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == map.getId())).findAny().orElse(null);
             if (imageMap != null) {
                 imageMap.rename(json.get("name").getAsString());
                 map.setName(json.get("name").getAsString());
@@ -437,26 +419,24 @@ public class ServerRoot {
                 return;
             }
 
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    var rotondos = db.getRotondoDao().queryForEq("of_id", map.getId());
-                    var imageMaps = Arrays.stream(MapManager.getMaps(player.getUniqueId())).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == map.getId() || rotondos.stream().anyMatch(rotondo -> rotondo.getId() == id)));
-                    for (var imageMap : imageMaps.toList()) {
-                        MapManager.clear(player.getInventory(), imageMap);
-                        MapManager.deleteMap(imageMap);
-                    }
+            try {
+                var rotondos = db.getRotondoDao().queryForEq("of_id", map.getId());
 
-                    //Remove the map from all collections
-                    List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForAll().stream().filter(collectionEntry -> collectionEntry.getMap().getId() == map.getId()).collect(Collectors.toList());
-                    if (!toDelete.isEmpty()) db.getCollectionMapDao().delete(toDelete);
-
-                    db.getRotondoDao().delete(rotondos);
-                    db.getMapDao().delete(map);
-                    res.sendStatus(Status._204);
-                } catch (SQLException | MapManagerException throwables) {
-                    throwables.printStackTrace();
+                var imageMaps = ImageFrame.imageMapManager.getFromCreator(player.getUniqueId()).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == map.getId() || rotondos.stream().anyMatch(rotondo -> rotondo.getId() == id)));
+                for (var imageMap : imageMaps.toList()) {
+                    ImageFrame.imageMapManager.deleteMap(imageMap.getImageIndex());
                 }
-            });
+
+                //Remove the map from all collections
+                List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForAll().stream().filter(collectionEntry -> collectionEntry.getMap().getId() == map.getId()).collect(Collectors.toList());
+                if (!toDelete.isEmpty()) db.getCollectionMapDao().delete(toDelete);
+
+                db.getRotondoDao().delete(rotondos);
+                db.getMapDao().delete(map);
+                res.sendStatus(Status._204);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
 
         @DynExpress(context = "/maps/:id/give", method = RequestMethod.GET)
@@ -487,7 +467,7 @@ public class ServerRoot {
             }
 
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                Arrays.stream(MapManager.getMaps(UUID.fromString(associatedPlayer))).filter(im -> Arrays.stream(im.getMapsIDs()).anyMatch(id -> id == idToObtain)).findAny().ifPresent(imageMap -> imageMap.give(player));
+                ImageFrame.imageMapManager.getFromCreator(UUID.fromString(associatedPlayer)).stream().filter(im -> im.getMapIds().stream().anyMatch(id -> id == idToObtain)).findAny().ifPresent(imageMap -> ImageFrame.combinedMapItemHandler.giveCombinedMap(imageMap, player));
                 res.sendStatus(Status._204);
             });
         }
@@ -627,6 +607,19 @@ public class ServerRoot {
             }
 
             array.add(mapObj);
+        }
+    }
+
+    private void updateImageMap(String imageHash, URLImageMap imageMap) throws IOException {
+        var imageData = images.getImageData(imageHash);
+
+        var oldUrl = imageMap.getUrl();
+        imageMap.setUrl(imageData.getImageUrl());
+        try {
+            imageMap.update();
+        } catch (Throwable e) {
+            imageMap.setUrl(oldUrl);
+            e.printStackTrace();
         }
     }
 

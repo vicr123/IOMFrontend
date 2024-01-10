@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,8 +29,52 @@ public class ImageManager {
         return new FileInputStream(file);
     }
 
-    public String getImageUrl(String hash) {
-        return "http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + hash;
+    public static class ImageData {
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public int getImageHeight() {
+            return imageHeight;
+        }
+
+        public void setImageHeight(int imageHeight) {
+            this.imageHeight = imageHeight;
+        }
+
+        public int getImageWidth() {
+            return imageWidth;
+        }
+
+        public void setImageWidth(int imageWidth) {
+            this.imageWidth = imageWidth;
+        }
+
+        public int getBlockWidth() {
+            return (int) Math.ceil(getImageWidth() / 128.0);
+        }
+
+        public int getBlockHeight() {
+            return (int) Math.ceil(getImageHeight() / 128.0);
+        }
+
+        private String imageUrl;
+        private int imageHeight;
+        private int imageWidth;
+    }
+
+    public ImageData getImageData(String hash) throws IOException {
+        var image = ImageIO.read(getImage(hash));
+
+        var d = new ImageData();
+        d.setImageUrl("http://localhost:" + plugin.getConfig().getInt("port")  + "/images/" + hash);
+        d.setImageWidth(image.getWidth());
+        d.setImageHeight(image.getHeight());
+        return d;
     }
 
     public String putImage(byte[] imageData) throws IOException, NoSuchAlgorithmException {
