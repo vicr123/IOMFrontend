@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.loohp.imageframe.ImageFrame;
+import com.loohp.imageframe.migration.ImageOnMapMigration;
 import com.loohp.imageframe.objectholders.ImageMap;
 import com.loohp.imageframe.objectholders.URLImageMap;
 import com.loohp.imageframe.objectholders.URLStaticImageMap;
@@ -428,7 +429,11 @@ public class ServerRoot {
                 }
 
                 //Remove the map from all collections
-                List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForAll().stream().filter(collectionEntry -> collectionEntry.getMap().getId() == map.getId()).collect(Collectors.toList());
+                List<CollectionEntry> toDelete = db.getCollectionMapDao().queryForAll().stream().filter(collectionEntry -> {
+                    var m = collectionEntry.getMap();
+                    if (m == null) return false;
+                    return m.getId() == map.getId();
+                }).collect(Collectors.toList());
                 if (!toDelete.isEmpty()) db.getCollectionMapDao().delete(toDelete);
 
                 db.getRotondoDao().delete(rotondos);
@@ -436,6 +441,7 @@ public class ServerRoot {
                 res.sendStatus(Status._204);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
+                res.sendStatus(Status._500);
             }
         }
 

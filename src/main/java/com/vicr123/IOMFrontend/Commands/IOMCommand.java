@@ -30,6 +30,11 @@ public class IOMCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (ImageFrame.imageMapManager.getMaps().isEmpty()) {
+            sender.sendMessage("Mapsigns are still loading because the server has just started. Please try editing mapsigns again in a few minutes.");
+            return false;
+        }
+
         if (!(sender instanceof Player)) {
             sender.sendMessage("This command can only be run by a player.");
             return false;
