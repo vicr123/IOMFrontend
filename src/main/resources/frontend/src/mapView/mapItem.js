@@ -27,7 +27,7 @@ class MapItem extends React.Component {
                 buttons.push(<MapItemDropTarget onClick={this.setCatg.bind(this)} key={"recategorise"}>Recategorise</MapItemDropTarget>);
                 buttons.push(<MapItemDropTarget onClick={this.addCollection.bind(this)} key={"addToCollection"}>Add to Collection</MapItemDropTarget>);
                 if (Object.keys(this.props.data.rotondos).length === 0) {
-                    buttons.push(<MapItemDropTarget onClick={this.createRotondo.bind(this)} key={"rotondo"}>Convert to Rotondo Map</MapItemDropTarget>);
+                    // buttons.push(<MapItemDropTarget onClick={this.createRotondo.bind(this)} key={"rotondo"}>Convert to Rotondo Map</MapItemDropTarget>);
                 }
                 buttons.push(<MapItemDropTarget onClick={this.setName.bind(this)} key={"rename"}>Rename</MapItemDropTarget>);
                 buttons.push(<MapItemDropTarget onClick={this.deleteMap.bind(this)} key={"delete"}>Delete</MapItemDropTarget>);
@@ -222,7 +222,7 @@ class MapItem extends React.Component {
             let transfer = e.dataTransfer;
             let file = [...transfer.items].filter(item => item.kind === "file")
                 .map(item => item.getAsFile())
-                .filter(file => ["image/png", "image/svg+xml"].includes(file.type))[0];
+                .filter(file => ["image/png", "image/svg+xml", "image/gif"].includes(file.type))[0];
 
             if (file) this.props.manager.updateImage(this.props.data.id, file);
         } catch (exception) {

@@ -16,7 +16,7 @@ class MapManager {
                 if (!imageContents) continue;
 
                 await Fetch.post("/maps", {
-                    name: file.name.replace(".png", ""),
+                    name: file.name.replace(/\.[^/.]+$/, ""),
                     category: category,
                     image: imageContents
                 });
@@ -110,6 +110,7 @@ class MapManager {
             });
             await this.#onUpdateListener();
         } catch (e) {
+            alert("Unable to upload the image. Check the following:\n- You are connected to the Internet\n- You are replacing a mapsign with the same type of image (i.e. you can't replace a static mapsign with a animated mapsign)\n- You are logged into the Minecraft server\n- You are replacing a new mapsign (you can't replace a mapsign from ImageOnMap)")
             throw e;
         } finally {
             Scrim.unmount();

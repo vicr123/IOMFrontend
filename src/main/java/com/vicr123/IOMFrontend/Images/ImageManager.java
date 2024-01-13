@@ -1,7 +1,6 @@
 package com.vicr123.IOMFrontend.Images;
 
 import com.vicr123.IOMFrontend.IOMFrontendPlugin;
-import org.bukkit.Bukkit;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -17,6 +16,11 @@ public class ImageManager {
     File imageDirectory;
     IOMFrontendPlugin plugin;
 
+    public class PutImageData {
+        public String imageHash;
+        public String type;
+    }
+
     public ImageManager(IOMFrontendPlugin plugin) {
         this.plugin = plugin;
 
@@ -26,6 +30,9 @@ public class ImageManager {
 
     public InputStream getImage(String hash) throws FileNotFoundException {
         File file = new File(imageDirectory, hash + ".png");
+        if (!file.exists()) {
+            file = new File(imageDirectory, hash + ".gif");
+        }
         return new FileInputStream(file);
     }
 
@@ -77,10 +84,16 @@ public class ImageManager {
         return d;
     }
 
-    public String putImage(byte[] imageData) throws IOException, NoSuchAlgorithmException {
+    public PutImageData putImage(byte[] imageData) throws IOException, NoSuchAlgorithmException {
+        var retval = new PutImageData();
         if (imageData.length > 4 && imageData[0] == (byte) 0x89 && imageData[1] == (byte) 0x50 && imageData[2] == (byte) 0x4E && imageData[3] == (byte) 0x47) {
             //This is already a PNG file
-            return putFile(imageData);
+            retval.imageHash = putFile(imageData, "png");
+            retval.type = "image/png";
+        } else if (imageData.length > 3 && imageData[0] == (byte) 0x47 && imageData[1] == (byte) 0x49 && imageData[2] == (byte) 0x46) {
+            // This is a GIF file
+            retval.imageHash = putFile(imageData, "gif");
+            retval.type = "image/gif";
         } else if (isSvg(imageData)) {
             ProcessBuilder builder = new ProcessBuilder("inkscape", "--export-type=png", "--pipe", "--export-filename=-");
             builder.redirectError(ProcessBuilder.Redirect.DISCARD);
@@ -96,14 +109,15 @@ public class ImageManager {
             os.write(proc.getInputStream().readAllBytes());
 
             if (proc.exitValue() != 0) throw new IllegalArgumentException("SVG could not be converted");
-            return putFile(os.toByteArray());
-
+            retval.imageHash = putFile(os.toByteArray(), "png");
+            retval.type = "image/png";
         } else {
             throw new IllegalArgumentException("Unknown file type");
         }
+        return retval;
     }
 
-    private String putFile(byte[] fileData) throws IOException, NoSuchAlgorithmException {
+    private String putFile(byte[] fileData, String extension) throws IOException, NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-512");
         digest.update(fileData);
         byte[] hexDigest = digest.digest();
@@ -113,7 +127,7 @@ public class ImageManager {
 
         String hash = hexBuilder.toString();
 
-        File file = new File(imageDirectory, hash + ".png");
+        File file = new File(imageDirectory, hash + "." + extension);
         FileOutputStream output = new FileOutputStream(file);
         output.write(fileData);
         output.close();

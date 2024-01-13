@@ -12,7 +12,7 @@ class NewMapItemSelector extends React.Component {
     render() {
         return <div className={Styles.SelectorRoot} onClick={this.onClick.bind(this)}>
             <div className={Styles.AddPicture} />
-            <input className={Styles.FileSelector} type={"file"} accept={"image/png,image/svg+xml"} onChange={this.onChange.bind(this)} ref={this.fileSelector} multiple={true} />
+            <input className={Styles.FileSelector} type={"file"} accept={"image/png,image/svg+xml,image/gif"} onChange={this.onChange.bind(this)} ref={this.fileSelector} multiple={true} />
         </div>
     }
 
@@ -22,7 +22,7 @@ class NewMapItemSelector extends React.Component {
 
     onChange(e) {
         this.props.manager.uploadMaps(
-            [...e.target.files].filter(file => ["image/png", "image/svg+xml"].includes(file.type)), this.props.category);
+            [...e.target.files].filter(file => ["image/png", "image/svg+xml", "image/gif"].includes(file.type)), this.props.category);
 
         e.target.value = null;
     }
