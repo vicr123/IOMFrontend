@@ -1,14 +1,14 @@
 import Fetch from "./fetch";
 import Scrim from "./Scrim";
 
-class MapManager {
-    #onUpdateListener;
+export class MapManager {
+    #onUpdateListener: any;
 
-    setOnUpdateListener(listener) {
+    setOnUpdateListener(listener: any) {
         this.#onUpdateListener = listener;
     }
 
-    async uploadMaps(maps, category) {
+    async uploadMaps(maps: File[], category: string) {
         Scrim.mount();
         try {
             for (let file of maps) {
@@ -29,7 +29,7 @@ class MapManager {
         }
     }
 
-    async deleteMap(id) {
+    async deleteMap(id: string) {
         Scrim.mount();
         try {
             await Fetch.delete(`/maps/${id}`);
@@ -41,7 +41,7 @@ class MapManager {
         }
     }
 
-    async deleteCollection(id, collection) {
+    async deleteCollection(id: string, collection: string) {
         Scrim.mount();
         try {
             await Fetch.delete(`/maps/${id}/collection/${encodeURIComponent(collection)}`);
@@ -53,11 +53,11 @@ class MapManager {
         }
     }
 
-    async giveMap(id) {
+    async giveMap(id: string) {
         await Fetch.get(`/maps/${id}/give`)
     }
 
-    async setCatg(id, catg) {
+    async setCatg(id: string, catg: string) {
         Scrim.mount();
         try {
             await Fetch.post(`/maps/${id}/category`, {
@@ -71,7 +71,7 @@ class MapManager {
         }
     }
 
-    async addToCollection(id, collection) {
+    async addToCollection(id: string, collection: string) {
         Scrim.mount();
         try {
             await Fetch.post(`/maps/${id}/collection`, {
@@ -85,7 +85,7 @@ class MapManager {
         }
     }
 
-    async setName(id, name) {
+    async setName(id: string, name: string) {
         Scrim.mount();
         try {
             await Fetch.post(`/maps/${id}/name`, {
@@ -99,7 +99,7 @@ class MapManager {
         }
     }
 
-    async updateImage(id, file) {
+    async updateImage(id: number, file: any) {
         Scrim.mount();
         try {
             let imageContents = await this.getImage(file);
@@ -117,7 +117,7 @@ class MapManager {
         }
     }
 
-    async createRotondo(id) {
+    async createRotondo(id: string) {
         Scrim.mount();
         try {
             await Fetch.post(`/maps/${id}/rotondo`, {
@@ -131,13 +131,13 @@ class MapManager {
         }
     }
 
-    getImage(file) {
+    getImage(file: any) {
         return new Promise((res, rej) => {
             let reader = new FileReader();
             reader.onload = () => {
                 //Perform checks
                 let image = new Image();
-                image.src = reader.result.toString();
+                image.src = reader.result!.toString();
                 image.onload = () => {
                     if (!(image.width % 128 === 0 && image.width % 128 === 0)) {
                         if (!window.confirm("You are uploading an image with a non-canon size. For best results, the image should be sized in multiples of 128x128.")) {
@@ -145,7 +145,9 @@ class MapManager {
                             return;
                         }
                     }
-                    res(reader.result.substr(reader.result.indexOf(",") + 1));
+
+                    const result = reader.result as string;
+                    res(result.substr(result.indexOf(",") + 1));
                 }
             }
             reader.onerror = error => rej(error);

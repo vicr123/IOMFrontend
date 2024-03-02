@@ -6,6 +6,8 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "@types/react-dom": "^18.2.19",
+    "@types/wicg-file-system-access": "^2023.10.4",
     "@vitejs/plugin-react-swc": "^3.6.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -37,5 +39,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:21000"
+  "proxy": "http://localhost:21000",
+  "devDependencies": {
+    "@types/react": "^18.2.61"
+  }
 }

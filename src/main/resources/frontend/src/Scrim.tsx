@@ -15,7 +15,7 @@ class Scrim extends React.Component {
     }
 
     static unmount() {
-        ReactDOM.unmountComponentAtNode(document.getElementById('scrim'));
+        ReactDOM.unmountComponentAtNode(document.getElementById('scrim')!);
     }
 }
 

@@ -1,8 +1,3 @@
-import React from 'react';
-
-let posts = {};
-let user = {};
-
 
 // Fetch is a custom wrapper around the fetch API.
 class Fetch {
@@ -10,7 +5,7 @@ class Fetch {
      * Define and create custom headers for Fetch requests
      */
     static headers() {
-        let headers = {
+        let headers: Record<string, string> = {
             "Content-Type": "application/json"
         };
 
@@ -26,7 +21,7 @@ class Fetch {
      * @param {string} url endpoint for the API call
      * @param {boolean} showLoader if true displays a loading animation
      */
-    static async performRequest(method, url, showLoader) {
+    static async performRequest(method: string, url: string, showLoader: boolean) {
         let err = null;
         // Display loading animation for the user
         // if (showLoader) Loader.mount();
@@ -39,7 +34,7 @@ class Fetch {
             err = error;
         }).finally(() => {
             // if (showLoader) Loader.unmount();
-        });
+        }) as Response;
 
         if (err) throw err;
         if (result.status === 204) return {};
@@ -53,7 +48,7 @@ class Fetch {
      * @param {Object} data payload of information
      * @param {boolean} showLoader if true displays a loading animation
      */
-    static async post(url, data, showLoader = true) {
+    static async post(url: string, data: any, showLoader = true) {
         let err = null;
         // if (showLoader) Loader.mount();
         let result = await fetch(`${url}`, {
@@ -64,7 +59,7 @@ class Fetch {
             err = error;
         }).finally(() => {
             // if (showLoader) Loader.unmount();
-        });
+        }) as Response;
 
         if (err) throw err;
         if (result.status === 204 || result.status === 201) return {};
@@ -78,7 +73,7 @@ class Fetch {
      * @param {Object} data Payload to patch with
      * @param {boolean} showLoader if true displays a loading animation
      */
-    static async patch(url, data, showLoader = true) {
+    static async patch(url: string, data: any, showLoader = true) {
         let err = null;
         // if (showLoader) Loader.mount();
         let result = await fetch(`${url}`, {
@@ -89,7 +84,7 @@ class Fetch {
             err = error;
         }).finally(() => {
             // if (showLoader) Loader.unmount();
-        });
+        }) as Response;
 
         if (err) throw err;
         if (result.status === 204 || result.status === 201) return {};
@@ -104,7 +99,7 @@ class Fetch {
      * @param {Object} data payload of information
      * @param {boolean} showLoader if true displays a loading animation
      */
-    static async put(url, data, showLoader = true) {
+    static async put(url: string, data: any, showLoader = true) {
         let err = null;
         // if (showLoader) Loader.mount();
         let result = await fetch(`${url}`, {
@@ -115,7 +110,7 @@ class Fetch {
             err = error;
         }).finally(() => {
             // if (showLoader) Loader.unmount();
-        });
+        }) as Response;
 
         if (err) throw err;
         if (result.status === 204 || result.status === 201) return {};
@@ -128,7 +123,7 @@ class Fetch {
      * @param {string} url url to perform API request
      * @param {boolean} showLoader boolean value to display loading animation
      */
-    static get(url, showLoader = true) {
+    static get(url: string, showLoader = true) {
         return Fetch.performRequest("GET", url, showLoader);
     }
 
@@ -137,50 +132,8 @@ class Fetch {
      * @param {string} url url to perform API request
      * @param {boolean} showLoader boolean value to display loading animation
      */
-    static delete(url, showLoader = true) {
+    static delete(url: string, showLoader = true) {
         return Fetch.performRequest("DELETE", url, showLoader);
-    }
-    /**
-     * Retrieves post based on postID
-     * @param {number} id postID
-     */
-    static async getPost(id) {
-        if (!posts[id]) {
-            posts[id] = await Fetch.get(`/posts/${id}`, false);
-        }
-        return posts[id];
-    }
-    /**
-     * Get the user based on userID
-     * @param {number} id userID from the backend
-     */
-    static async getUser(id) {
-        if (!user[id]) {
-            user[id] = await Fetch.get(`/users/${id}`, false);
-        }
-        return user[id];
-    }
-    /**
-     * Remove garbage posts with an illegal ID
-     * @param {number} id postID
-     */
-    static invalidatePost(id = -1) {
-        if (id === -1) {
-            posts = {};
-        } else if (posts.hasOwnProperty(id)) {
-            delete posts[id];
-        }
-    }
-
-    static invalidateUser(id) {
-        if (user.hasOwnProperty(id)) delete user[id];
-    }
-    /**
-     * Reset objects
-     */
-    static invalidate() {
-        posts = {};
-        user = {};
     }
 }
 
