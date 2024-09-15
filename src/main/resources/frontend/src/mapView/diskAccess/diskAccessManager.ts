@@ -11,6 +11,7 @@ export class DiskAccessManager {
     private oldEntries: {name: string, size: number}[] | undefined;
     private setStatus: StatusStringUpdate;
     private data: MapSign[];
+    private polling = false;
 
     static async create(manager: MapManager, data: MapSign[], handle: FileSystemDirectoryHandle, setStatus: StatusStringUpdate) {
         await handle.getFileHandle(".iomroot", {
@@ -53,46 +54,53 @@ export class DiskAccessManager {
     }
 
     async pollFiles() {
-        if (!this.oldEntries) {
-            this.oldEntries = await this.entries();
-        }
+        if (this.polling) return;
 
-        const newEntries = await this.entries();
-
-        // Calculate a diff
-        let addedFiles = newEntries.filter((newEntry) => !this.oldEntries!.some((oldEntry) => oldEntry.name === newEntry.name));
-        // let removedFiles = this.oldEntries.filter((oldEntry) => !newEntries.some((newEntry) => newEntry.name === oldEntry.name));
-        let changedFiles = newEntries.filter((newEntry) => this.oldEntries!.some((oldEntry) => oldEntry.name === newEntry.name && oldEntry.size !== newEntry.size));
-
-        for (const entry of addedFiles) {
-            this.setStatus(`Adding ${entry.name}...`)
-            const fileInfo = await this.getFile(entry.name);
-            if (!fileInfo) {
-                this.setStatus(`${entry.name} could not be added`)
-                return;
+        this.polling = true;
+        try {
+            if (!this.oldEntries) {
+                this.oldEntries = await this.entries();
             }
 
-            const [file, fileName, category] = fileInfo;
-            await this.manager.uploadMaps([file], category);
-            this.setStatus(`Added ${entry.name}.`)
-        }
+            const newEntries = await this.entries();
 
-        for (const entry of changedFiles) {
-            this.setStatus(`Updating ${entry.name}...`);
-            const fileInfo = await this.getFile(entry.name);
-            if (!fileInfo) {
-                this.setStatus(`${entry.name} could not be updated`)
-                return;
+            // Calculate a diff
+            let addedFiles = newEntries.filter((newEntry) => !this.oldEntries!.some((oldEntry) => oldEntry.name === newEntry.name));
+            // let removedFiles = this.oldEntries.filter((oldEntry) => !newEntries.some((newEntry) => newEntry.name === oldEntry.name));
+            let changedFiles = newEntries.filter((newEntry) => this.oldEntries!.some((oldEntry) => oldEntry.name === newEntry.name && oldEntry.size !== newEntry.size));
+
+            for (const entry of addedFiles) {
+                this.setStatus(`Adding ${entry.name}...`)
+                const fileInfo = await this.getFile(entry.name);
+                if (!fileInfo) {
+                    this.setStatus(`${entry.name} could not be added`)
+                    return;
+                }
+
+                const [file, fileName, category] = fileInfo;
+                await this.manager.uploadMaps([file], category);
+                this.setStatus(`Added ${entry.name}.`)
             }
-            const [file, fileName, category] = fileInfo
 
-            const id = this.data.filter(x => x.category == category && x.name == fileName.substring(0, fileName.lastIndexOf(".")))[0].id;
+            for (const entry of changedFiles) {
+                this.setStatus(`Updating ${entry.name}...`);
+                const fileInfo = await this.getFile(entry.name);
+                if (!fileInfo) {
+                    this.setStatus(`${entry.name} could not be updated`)
+                    return;
+                }
+                const [file, fileName, category] = fileInfo
 
-            await this.manager.updateImage(id, file);
-            this.setStatus(`Updated ${entry.name}.`);
+                const id = this.data.filter(x => x.category == category && x.name == fileName.substring(0, fileName.lastIndexOf(".")))[0].id;
+
+                await this.manager.updateImage(id, file);
+                this.setStatus(`Updated ${entry.name}.`);
+            }
+
+            this.oldEntries = newEntries;
+        } finally {
+            this.polling = false;
         }
-
-        this.oldEntries = newEntries;
     }
 
     async getFile(name: string): Promise<[File, string, string] | null> {
