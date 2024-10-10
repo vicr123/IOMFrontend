@@ -148,7 +148,7 @@ export class DiskAccessManager {
     }
 
     private validFileName(key: string) {
-        return /(\.svg|\.png|\.gif)$/.test(key)
+        return /(\.svg|\.png|\.gif|\.webp)$/.test(key)
     }
 }
 

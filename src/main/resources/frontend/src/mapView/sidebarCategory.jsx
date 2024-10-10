@@ -79,7 +79,7 @@ class SidebarCategory extends React.Component {
                 this.props.manager.uploadMaps(
                     [...transfer.items].filter(item => item.kind === "file")
                         .map(item => item.getAsFile())
-                        .filter(file => ["image/png", "image/svg+xml"].includes(file.type)), this.props.category);
+                        .filter(file => ["image/png", "image/svg+xml", "image/gif", "image/webp"].includes(file.type)), this.props.category);
             }
         }
     }

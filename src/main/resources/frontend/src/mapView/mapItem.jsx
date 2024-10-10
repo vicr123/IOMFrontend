@@ -75,7 +75,7 @@ export default function MapItem({data, collection, isCollection, manager}) {
             let transfer = e.dataTransfer;
             let file = [...transfer.items].filter(item => item.kind === "file")
                 .map(item => item.getAsFile())
-                .filter(file => ["image/png", "image/svg+xml", "image/gif"].includes(file.type))[0];
+                .filter(file => ["image/png", "image/svg+xml", "image/gif", "image/webp"].includes(file.type))[0];
 
             if (file) manager.updateImage(data.id, file);
         } catch (exception) {

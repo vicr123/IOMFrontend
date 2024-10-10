@@ -32,6 +32,9 @@ public class ImageManager {
         File file = new File(imageDirectory, hash + ".png");
         if (!file.exists()) {
             file = new File(imageDirectory, hash + ".gif");
+            if (!file.exists()) {
+                file = new File(imageDirectory, hash + ".webp");
+            }
         }
         return new FileInputStream(file);
     }
@@ -94,6 +97,10 @@ public class ImageManager {
             // This is a GIF file
             retval.imageHash = putFile(imageData, "gif");
             retval.type = "image/gif";
+        } else if (isWebP(imageData)) {
+            // This is a WebP file
+            retval.imageHash = putFile(imageData, "webp");
+            retval.type = "image/webp";
         } else if (isSvg(imageData)) {
             ProcessBuilder builder = new ProcessBuilder("inkscape", "--export-type=png", "--pipe", "--export-filename=-");
             builder.redirectError(ProcessBuilder.Redirect.DISCARD);
@@ -147,5 +154,15 @@ public class ImageManager {
         } catch (SAXException | IOException | ParserConfigurationException e) {
             return false;
         }
+    }
+
+    public static boolean isWebP(byte[] data) {
+        if (data == null || data.length < 12) {
+            return false;
+        }
+
+        // Check for RIFF header and WEBP format
+        return data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F'
+                && data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P';
     }
 }
