@@ -7,9 +7,9 @@ export default defineConfig({
     plugins: [react()],
     server: {
         proxy: {
-            "/maps": "http://localhost:21000",
-            "/collections": "http://localhost:21000",
-            "/images": "http://localhost:21000"
+            "/maps": "https://iom.aircs.racing",
+            "/collections": "https://iom.aircs.racing",
+            "/images": "https://iom.aircs.racing"
         }
     },
     build: {

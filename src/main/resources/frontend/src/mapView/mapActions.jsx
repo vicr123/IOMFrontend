@@ -52,4 +52,5 @@ export function availableMapActions(data, isCollection, collection, manager, onC
             }
         ]
     }
+    return [];
 }
