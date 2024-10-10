@@ -1,10 +1,12 @@
 .SidebarCategory {
-    padding: 3px;
+    padding: 9px 6px;
     color: white;
+    background: rgb(40, 40, 40);
+    border-radius: 10px;
 }
 
 .SidebarCategory:hover {
-    background-color: rgba(0, 80, 150, 0.5);
+    /*background-color: rgba(0, 80, 150, 0.5);*/
 }
 
 .SidebarLink {
@@ -13,6 +15,6 @@
 }
 
 .Dragging {
-    padding: 0px;
+    padding: 6px 3px;
     border: 3px solid aqua;
 }

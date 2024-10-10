@@ -1,12 +1,14 @@
-@font-face {
-    font-family: "Contemporary";
-    font-style: normal;
-    font-weight: 400;
-    src: local("Contemporary"), local("Contemporary-Regular"), url(https://vicr123.com/typeface/Contemporary-Regular.ttf);
-}
+/*@font-face {*/
+/*    font-family: "Contemporary";*/
+/*    font-style: normal;*/
+/*    font-weight: 400;*/
+/*    src: local("Contemporary"), local("Contemporary-Regular"), url(https://vicr123.com/typeface/Contemporary-Regular.ttf);*/
+/*}*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 body {
-    background: rgb(40, 40, 40);
+    background: rgb(50, 50, 50);
     color: white;
-    font-family: Contemporary, sans-serif;
+    font-family: Inter, sans-serif;
 }

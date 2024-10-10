@@ -1,28 +1,50 @@
 .Sidebar {
     grid-area: sidebar;
     border-right: 1px solid white;
-}
-
-.SidebarInset {
-    position: sticky;
-    top: 0;
-
+    background: rgb(13, 13, 13);
     max-height: 100dvh;
-    overflow-y: auto;
+    min-height: 100dvh;
+    padding: 10px;
+    box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
 }
 
+.SidebarInset {
+    /*position: sticky;*/
+    /*top: 10px;*/
+
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-grow: 1;
+}
+
 .SidebarTitle {
-    padding: 9px;
-    font-size: 15pt;
-    background-color: rgb(80, 80, 80);
+    display: flex;
+    /*padding: 9px;*/
+    font-size: 13pt;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.SidebarLine {
+    height: 2px;
+    background: white;
+    flex-grow: 1;
 }
 
 .SearchArea {
     padding: 9px;
     border: none;
+    border-radius: 10px;
     background-color: rgb(60, 60, 60);
     color: white;
 }

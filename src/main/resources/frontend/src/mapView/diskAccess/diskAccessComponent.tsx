@@ -4,6 +4,7 @@ import {MapManager} from "../../mapmanager";
 import {MapSign} from "../../interfaces";
 
 import Styles from "./diskAccessComponent.module.css"
+import {ControlButton} from "../controlButton";
 
 export default function DiskAccessComponent({manager, data}: {
     manager: MapManager,
@@ -48,15 +49,14 @@ export default function DiskAccessComponent({manager, data}: {
 
     return <div>
         {diskAccess ? <div className={Styles.root}>
-                <span className={Styles.header}>DISK ACCESS</span>
-                <span>Stop disk access to stop automatically uploading changes to images from a folder.</span>
-                <button onClick={stopDiskAccess}>Stop Watching Disk</button>
+                <span className={Styles.header}>Disk Access</span>
+                <ControlButton text={"Stop Watching Disk"} onClick={stopDiskAccess} />
                 <span>{status}</span>
             </div> :
             <div className={Styles.root}>
-                <span className={Styles.header}>DISK ACCESS</span>
+                <span className={Styles.header}>Disk Access</span>
                 <span>Select a folder to watch for changes. You can save image files to this folder and have IOM automatically upload them.</span>
-                <button onClick={chooseFolder}>Choose Folder</button>
+                <ControlButton text={"Choose Folder"} onClick={chooseFolder} />
             </div>
         }
         {diskAccessWarning && <div className={Styles.diskAccess}>

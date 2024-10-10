@@ -5,6 +5,7 @@ import NewMapItemSelector from "./newMapItemSelector";
 
 import Disclosure from "./disclosure.svg";
 import Disclosed from "./disclosed.svg";
+import {Icon} from "../icon";
 
 class MapCategory extends React.Component {
     constructor(props) {
@@ -27,9 +28,11 @@ class MapCategory extends React.Component {
     render() {
         return <div className={Styles.CategoryRoot} onDragEnter={this.dragEnter.bind(this)} onDrop={this.drop.bind(this)} onDragLeave={this.dragLeave.bind(this)} onDragOver={this.dragOver.bind(this)}>
             <div className={Styles.CategoryHeader} onClick={this.toggleCollapse.bind(this)}>
-                <img className={Styles.Disclosure} src={this.state.collapsed ? Disclosure : Disclosed}/>
-                <a name={MapCategory.categoryLinkName(this.props.category)} />
+                <a name={MapCategory.categoryLinkName(this.props.category)}/>
                 {MapCategory.categoryName(this.props.category)}
+                {/*<img className={Styles.Disclosure} src={this.state.collapsed ? Disclosure : Disclosed}/>*/}
+                <div style={{flexGrow: "1"}} />
+                <Icon icon={this.state.collapsed ? "arrow-down" : "arrow-up"} />
             </div>
             {this.renderMaps()}
         </div>

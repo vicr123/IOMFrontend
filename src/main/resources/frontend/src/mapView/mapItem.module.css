@@ -1,6 +1,18 @@
 .MapItem {
     cursor: pointer;
     overflow: hidden;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+
+    height: 128px;
+    aspect-ratio: 1 / 1;
+
+    display: grid;
+    grid-template-areas: "image";
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    justify-items: stretch;
 }
 
 .MapImage {
@@ -9,7 +21,8 @@
 
 .Dragging {
     border: 3px solid aqua;
-    margin: 0px;
+    padding: -3px;
+    /*margin: 0px;*/
     background-clip: padding-box;
 }
 
@@ -32,25 +45,42 @@
     padding: 9px;
 }
 
-.MapItem span {
-    opacity: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 9px;
-    font-size: 15pt;
-    transition: opacity 0.25s ease-out;
+.MapItemContainer {
+    background: rgb(51, 51, 51);
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
 }
 
-.MapItem:hover span {
-    opacity: 1;
+.mapImage {
+    object-fit: contain;
+    max-height: 100%;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
 }
 
 .MapItemInfo {
-    position: absolute;
+    /*position: absolute;*/
 
-    pointer-events: none;
+    /*pointer-events: none;*/
     display: flex;
-    flex-direction: column-reverse;
-    align-items: flex-start;
+    align-items: center;
+    /*font-size: 12px;*/
+    background: rgb(40, 40, 40);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.MapItemInfo span {
+    padding: 3px;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
 }
 
 .MapItemRotondo {

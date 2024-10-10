@@ -4,16 +4,17 @@
     grid-template-rows: min-content min-content;
     gap: 0px 0px;
     grid-template-areas:
-        "sidebar local-maps"
-        "sidebar global-maps";
+        "sidebar maps";
 }
 
 .LocalMaps {
-    grid-area: local-maps;
+    grid-area: maps;
+    overflow: auto;
+    max-height: 100dvh;
 }
 
 .GlobalMaps {
-    grid-area: global-maps;
+    grid-area: maps;
 }
 
 .SectionHeader {

@@ -3,10 +3,12 @@
 }
 
 .CategoryHeader {
-    background: white;
-    color: rgb(40, 40, 40);
-    padding: 3px;
-    text-transform: uppercase;
+    color: white;
+    background: rgb(40, 40, 40);
+    padding: 3px 6px;
+    /*text-transform: uppercase;*/
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 
     display: flex;
     align-items: center;
@@ -15,15 +17,19 @@
 .CategoryItems {
     display: grid;
     grid-auto-columns: 128px;
-    /*gap: 9px;*/
+    /*grid-auto-rows: 128px;*/
+    gap: 9px;
     grid-auto-flow: row;
     grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-    padding: 9px;
-    margin: 3px;
+    padding: 12px;
+    background: rgb(64, 64, 64);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .Dragging {
     border: 3px solid aqua;
+    padding: 9px;
     margin: 0px;
     background-clip: padding-box;
 }

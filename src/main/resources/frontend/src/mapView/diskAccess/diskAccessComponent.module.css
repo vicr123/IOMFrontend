@@ -4,6 +4,8 @@
 
     padding: 9px;
     gap: 6px;
+    background: rgb(40, 40, 40);
+    border-radius: 10px;
 }
 
 .diskAccess {
@@ -18,7 +20,8 @@
     align-items: center;
     justify-content: center;
 
-    background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);;
+    background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);
+    z-index: 100;
 }
 
 .header {

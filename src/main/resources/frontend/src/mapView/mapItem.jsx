@@ -4,6 +4,8 @@ import Toast from "../Toast";
 import Styles from "./mapItem.module.css";
 
 import GeneratedMap from "./generatedmap.svg";
+import {MapItemModal} from "./mapItemModal";
+import {Icon} from "../icon";
 
 class MapItem extends React.Component {
     constructor(props) {
@@ -13,33 +15,9 @@ class MapItem extends React.Component {
             dragging: false,
             draggingThis: false,
             width: 0,
-            height: 0
+            height: 0,
+            modalOpen: false
         };
-    }
-
-    renderButtons() {
-        if (this.state.draggingThis) {
-            let buttons = [];
-
-            if (this.props.isCollection) {
-                if (this.props.data.isOwner) buttons.push(<MapItemDropTarget onClick={this.removeCollection.bind(this)} key={"removeFromCollection"}>Remove from Collection</MapItemDropTarget>)
-            } else {
-                buttons.push(<MapItemDropTarget onClick={this.setCatg.bind(this)} key={"recategorise"}>Recategorise</MapItemDropTarget>);
-                buttons.push(<MapItemDropTarget onClick={this.addCollection.bind(this)} key={"addToCollection"}>Add to Collection</MapItemDropTarget>);
-                if (Object.keys(this.props.data.rotondos).length === 0) {
-                    // buttons.push(<MapItemDropTarget onClick={this.createRotondo.bind(this)} key={"rotondo"}>Convert to Rotondo Map</MapItemDropTarget>);
-                }
-                buttons.push(<MapItemDropTarget onClick={this.setName.bind(this)} key={"rename"}>Rename</MapItemDropTarget>);
-                buttons.push(<MapItemDropTarget onClick={this.deleteMap.bind(this)} key={"delete"}>Delete</MapItemDropTarget>);
-            }
-
-            return <div className={Styles.buttonSidebar}>
-                <span className={Styles.ActionsTitle}>Actions</span>
-                {buttons}
-            </div>;
-        } else {
-            return null;
-        }
     }
 
     componentDidMount() {
@@ -53,36 +31,11 @@ class MapItem extends React.Component {
         img.src = this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`;
     }
 
-    renderRotondoComponents() {
-        let rotondos = Object.keys(this.props.data.rotondos);
-        if (rotondos.length === 0) return;
-
-        rotondos.push("0");
-        let rotondoMap = this.props.data.rotondos;
-        rotondoMap["0"] = this.props.data.id;
-
-        const classes = {
-            "0": Styles.North,
-            "1": Styles.East,
-            "2": Styles.South,
-            "3": Styles.West
-        }
-
-        const rotondoNames = {
-            "0": "N",
-            "1": "E",
-            "2": "S",
-            "3": "W"
-        }
-
-        return rotondos.map(rotondoType => <div key={rotondoType} className={[classes[rotondoType], Styles.MapItemRotondoItem].join(" ")} onClick={() => this.giveRotondoMap(rotondoMap[rotondoType])}>{rotondoNames[rotondoType]}</div>);
-    }
-
     render() {
         if (this.state.width === 0) {
             return null;
         } else {
-            return <>
+            return <div className={Styles.MapItemContainer}>
                 <div draggable={true}
                      className={[Styles.MapItem, this.state.dragging ? Styles.Dragging : "", Object.keys(this.props.data.rotondos).length === 0 ? "" : Styles.MapItemRotondo].join(" ")}
                      onDragEnter={this.dragEnter.bind(this)}
@@ -91,31 +44,38 @@ class MapItem extends React.Component {
                      onDragOver={this.dragOver.bind(this)}
                      onDragStart={this.dragStart.bind(this)}
                      onDragEnd={this.dragEnd.bind(this)}
-                     onClick={this.click.bind(this)}
-                     style={{
-                         background: `linear-gradient(to right,rgba(0, 0, 0, 0.2),rgba(0, 0, 0, 0.2)),url(${this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`}) no-repeat center/cover`,
-                         aspectRatio: `${Math.min(this.state.width, 5)} / ${Math.min(this.state.height, 5)}`,
-                         gridColumn: `span ${Math.min(this.state.width, 5)}`,
-                         gridRow: `span ${Math.min(this.state.height, 5)}`,
-                         // width: this.state.width * 2,
-                         // height: this.state.height * 2
-                     }}
-                >
-                    <div className={Styles.MapItemRotondoSelect}>
-                        {this.renderRotondoComponents()}
-                    </div>
-                    <div className={Styles.MapItemInfo}>
-                        <span>{this.state.height} &times; {this.state.width} {Object.keys(this.props.data.rotondos).length === 0 ? "" : "R"}</span>
-                        <span>{this.props.data.name}</span>
-                    </div>
+                     onClick={this.click.bind(this)}>
+                    <img className={Styles.mapImage} src={this.props.data.pictureResource === "x" ? GeneratedMap : `/images/${this.props.data.pictureResource}`} />
                 </div>
-                {this.renderButtons()}
-            </>
+                <div className={Styles.MapItemInfo} onClick={this.expand.bind(this)}>
+                    <span>{this.props.data.name}</span>
+                    <div style={{flexGrow: "1"}}/>
+                    <Icon icon={"application-menu"}/>
+                </div>
+                <MapItemModal width={this.state.width} height={this.state.height} collection={this.props.collection} isCollection={this.props.isCollection}
+                              open={this.state.modalOpen} close={this.collapse.bind(this)} data={this.props.data}
+                              manager={this.props.manager}/>
+            </div>
         }
     }
 
+    async expand() {
+        this.setState({
+            modalOpen: true
+        })
+    }
+
+    async collapse() {
+        this.setState({
+            modalOpen: false
+        })
+    }
+
     async click() {
-        if (Object.keys(this.props.data.rotondos).length !== 0) return;
+        if (Object.keys(this.props.data.rotondos).length !== 0) {
+            await this.giveRotondoMap(this.props.data.id)
+            return;
+        }
         // try {
         Toast.makeToast(<Toast title={"Map Obtained"} text={"The map is now in your inventory."} />)
             await this.props.manager.giveMap(this.props.data.id);

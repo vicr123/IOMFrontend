@@ -6,4 +6,5 @@
     bottom: 0px;
 
     background-color: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
 }
