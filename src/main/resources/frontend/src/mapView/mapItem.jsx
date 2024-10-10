@@ -5,6 +5,8 @@ import Styles from "./mapItem.module.css";
 import GeneratedMap from "./generatedmap.svg";
 import {MapItemModal} from "./mapItemModal";
 import {Icon} from "../icon";
+import {Item, Menu, useContextMenu} from "react-contexify";
+import {availableMapActions} from "./mapActions";
 
 export default function MapItem({data, collection, isCollection, manager}) {
     const [width, setWidth] = useState(0);
@@ -12,6 +14,12 @@ export default function MapItem({data, collection, isCollection, manager}) {
     const [dragging, setDragging] = useState(false);
     const [draggingThis, setDraggingThis] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
+
+    const MAP_CONTEXT_MENU = `map-${data.name}-${isCollection}-${collection}`;
+
+    const {show} = useContextMenu({
+        id: MAP_CONTEXT_MENU
+    });
 
     useEffect(() => {
         const img = new Image();
@@ -80,10 +88,16 @@ export default function MapItem({data, collection, isCollection, manager}) {
         await manager.giveMap(data.id);
     }
 
+    const openContextMenu = (e) => {
+        show({
+            event: e
+        })
+    }
+
     if (width === 0) {
         return null;
     } else {
-        return <div className={Styles.MapItemContainer}>
+        return <div className={Styles.MapItemContainer} onContextMenu={openContextMenu}>
             <div draggable={true}
                  className={[Styles.MapItem, dragging ? Styles.Dragging : "", Object.keys(data.rotondos).length === 0 ? "" : Styles.MapItemRotondo].join(" ")}
                  onDragEnter={dragEnter}
@@ -103,6 +117,9 @@ export default function MapItem({data, collection, isCollection, manager}) {
             <MapItemModal width={width} height={height} collection={collection} isCollection={isCollection}
                           open={modalOpen} close={() => setModalOpen(false)} data={data}
                           manager={manager}/>
+            <Menu id={MAP_CONTEXT_MENU} theme={"dark"}>
+                {availableMapActions(data, isCollection, collection, manager, () => {}).map(({text, action}) => <Item onClick={action}>{text}</Item> )}
+            </Menu>
         </div>
     }
 }
