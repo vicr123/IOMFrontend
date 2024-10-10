@@ -7,6 +7,8 @@ import Styles from "./index.module.css";
 import Sidebar from "./sidebar";
 import MapCollection from "./mapCollection";
 import {CategoryContainer} from "./categoryContainer";
+import {LoadIndicator} from "./loadIndicator";
+import {ErrorIndicator} from "./errorIndicator";
 
 class MapView extends React.Component {
     constructor(props) {
@@ -17,12 +19,19 @@ class MapView extends React.Component {
 
         this.state = {
             searchQuery: "",
-            show: "local"
+            show: "local",
+            dataAvailable: !!window.localStorage.getItem("loaded")
         };
     }
 
     async componentDidMount() {
         await this.updateData();
+        setTimeout(() => {
+            window.localStorage.setItem("loaded", "true");
+            this.setState({
+                dataAvailable: true
+            });
+        }, 10000)
     }
 
     async updateData() {
@@ -40,10 +49,8 @@ class MapView extends React.Component {
 
     render() {
         if (this.state.error) {
-            return <div>
-                Please reload
-            </div>
-        } else if (this.state.data) {
+            return <ErrorIndicator />
+        } else if (this.state.data && this.state.dataAvailable) {
             return <div className={Styles.MainContainer}>
                 <Sidebar setShow={(show) => this.setState({show: show})} show={this.state.show} manager={this.mapManager} data={this.state.data} collections={this.state.collections} query={this.state.searchQuery} onSearchUpdated={this.searchUpdated.bind(this)} />
                 {this.state.show === "local" &&
@@ -64,9 +71,7 @@ class MapView extends React.Component {
                 }
             </div>
         } else {
-            return <div>
-                Please wait
-            </div>
+            return <LoadIndicator />
         }
     }
 
