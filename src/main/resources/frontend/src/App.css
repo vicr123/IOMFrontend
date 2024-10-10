@@ -12,3 +12,15 @@ body {
     color: white;
     font-family: Inter, sans-serif;
 }
+
+::-webkit-scrollbar {
+    display: block;
+    width: 15px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 10px;
+    border: 4px solid transparent;
+    background-clip: padding-box;
+}

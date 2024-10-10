@@ -20,9 +20,9 @@ export function MapItemModal({open, close, data, manager, isCollection, collecti
             />
             <div className={Styles.name}>
                 <span className={Styles.nameString}>{data.name}</span>
-                <div className={Styles.renameButton} onClick={rename}>
+                {data.isOwner && <div className={Styles.renameButton} onClick={rename}>
                     <Icon icon={"edit-rename"} />
-                </div>
+                </div>}
                 <span className={Styles.dimensions}>{width} &times; {height}</span>
             </div>
             <div className={Styles.controls}>

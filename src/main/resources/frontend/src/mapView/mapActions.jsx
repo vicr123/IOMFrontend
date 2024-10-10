@@ -1,6 +1,14 @@
 export function availableMapActions(data, isCollection, collection, manager, onCompleted) {
+    const getAction = () => {
+        manager.giveMap(data.id);
+        onCompleted();
+    }
     if (isCollection && data.isOwner) {
         return [
+            {
+                text: "Get",
+                action: getAction
+            },
             {
                 text: "Remove from Global Collection",
                 action: async () => {
@@ -16,10 +24,7 @@ export function availableMapActions(data, isCollection, collection, manager, onC
         return [
             {
                 text: "Get",
-                action: () => {
-                    manager.giveMap(data.id);
-                    onCompleted();
-                }
+                action: getAction
             },
             {
                 text: "Recategorise",
@@ -52,5 +57,10 @@ export function availableMapActions(data, isCollection, collection, manager, onC
             }
         ]
     }
-    return [];
+    return [
+        {
+            text: "Get",
+            action: getAction
+        }
+    ];
 }
